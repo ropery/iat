@@ -1,0 +1,38 @@
+############################################################
+# Parser for iat
+# Created by	: Salvatore Santagati 
+# Date		: April, 2009.
+############################################################
+
+
+package "IAT"
+version "0.2DEV"
+
+purpose "iat is a tool for detecting the structure of many types of image file"
+
+args "--no-handle-help --no-handle-version --no-handle-error --string-parser"
+
+option	"input"		i "A string option for a filename"
+	string typestr="image input"	optional							
+option	"output"	o "A string option for a filename"
+	string typestr="image output"	optional dependon="input"
+option  "verbose"	v "verbose mode" optional
+
+
+defgroup "conversation" groupdesc="Convert your image in :"
+groupoption "cue"		- "Create Cuesheet of your image"
+	group="conversation" optional dependon="input"
+groupoption "toc"		- "Create TOC of your image"
+	group="conversation" optional dependon="input"
+groupoption  "iso"		- "Create ISO9660 image"
+	group="conversation" optional dependon="input"
+
+#section "Scan image options "
+#option	"scan"			- "scan your image"
+#option	"percent"		- "percent of image scan" 
+#	int  typestr="byte"	 optional
+#option	"start"			- "start block scan image" optional
+#option	"closed"		- "enable support for proprietary image" optional
+#option 	"audio"			a "enable support for audio image" optional
+#option 	"zlib"			z "enable support for compress image" optional
+
