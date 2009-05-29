@@ -5,8 +5,8 @@
 ############################################################
 
 
-package "IAT"
-version "0.2DEV"
+#package "IAT"
+#version "0.2DEV"
 
 purpose "iat is a tool for detecting the structure of many types of image file"
 
@@ -17,7 +17,7 @@ option	"input"		i "A string option for a filename"
 option	"output"	o "A string option for a filename"
 	string typestr="image output"	optional dependon="input"
 option  "verbose"	v "verbose mode" optional
-
+option "debug"		- "debug image"	optional
 
 defgroup "conversation" groupdesc="Convert your image in :"
 groupoption "cue"		- "Create Cuesheet of your image"

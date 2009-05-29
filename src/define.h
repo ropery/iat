@@ -54,6 +54,7 @@ extern "C" {
 
 typedef struct file_ptrs {
 	FILE* fsource;
+	FILE* fdesc;
 	FILE* fdest;
 } file_ptrs;
 

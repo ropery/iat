@@ -39,11 +39,16 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
+/* Large File Support */
 #define _FILE_OFFSET_BITS 64
 #define _LARGEFILE_SOURCE
 
 #include <stdio.h>
 #include <errno.h>
+
+#ifdef HAVE_CONFIG_H
+#include "../config.h"
+#endif
 
 #ifndef DEFINE_H
 #include "define.h"
@@ -61,11 +66,23 @@
 #include "convert_2_iso.h"
 #endif
 
+#ifndef DEBUG_H
+#include "debug.h"
+#endif
+
+#ifndef MKCUE_H
+#include "mkcue.h"
+#endif
+
 int main ( int argc, char* argv [ ] )
 {
 	iat_parser iat_option;
 	image_struct img_struct = {0};
-	file_ptrs fptrs = {0};
+	file_ptrs fptrs = { 0 };
+
+	char *file_input = malloc ( sizeof (char) * 100  ); /* need fix */
+	char *file_desc = malloc ( sizeof (char) * 100 );  /* need fix */
+	char *file_new = malloc ( sizeof (char) * 100 );
 	
 	if ( ( cmdline_parser ( argc, argv, &iat_option ) != 0 ) || ( argc <= 1 ) ) {
 		fprintf( stderr,"Run %s --help to see the list of options.\n", argv [ 0 ] ) ;
@@ -78,7 +95,7 @@ int main ( int argc, char* argv [ ] )
 	}
 	
 	if ( iat_option.version_given ) {
-		printf ( "IAT v0.2\n" );
+		printf ( "%s v%s\n", PACKAGE_NAME, VERSION );
 		exit ( 0 );
 	}
   
@@ -91,6 +108,74 @@ int main ( int argc, char* argv [ ] )
 		fprintf ( stderr, "Run %s --help to see the list of options.\n", argv [ 0 ] );
 		exit ( 1 );
 	}
+
+	if ( iat_option.debug_given ) {
+		calculate_pregap ( &fptrs, &img_struct );
+		debug ( &fptrs, &img_struct );
+		exit ( 0 ) ;
+	}
+	
+	if ( iat_option.toc_given ) {
+	
+		printf ("Need implementation\n");	
+/*		calculate_pregap ( &fptrs, &img_struct );
+		if ( ( img_struct.pregap > 0 ) || ( img_struct.block >= 2448 ) ) {
+			printf ("Need implementation\n");
+		}
+	
+		create_toc ( &fptrs, &img_struct, file_input );
+
+		free ( file_desc );	
+*/
+		exit ( 0 );
+				
+	}	
+
+	if ( iat_option.cue_given ) {
+		
+		calculate_pregap ( &fptrs, &img_struct );
+
+		file_input = iat_option.input_arg;
+
+
+
+		if ( ( img_struct.pregap > 0 ) || ( img_struct.block >= 2448 ) ) {
+			
+			printf ( "Image conversion :\n\t%s => ", file_input );
+
+			smart_name ( file_input, file_input, ".bin" );
+			if ( ( fptrs.fdest = fopen ( file_input, "wb" ) ) == NULL ) {
+				fprintf ( stderr, "%s: %s\n", file_desc, strerror ( errno ) ) ;
+				exit ( 1 );
+			}
+
+			printf("%s \n", file_input);	
+	
+		}				
+			
+
+		/* Take name from original file for create name for cue */
+		smart_name ( file_desc, file_input, ".cue" );
+		
+
+		/* Create cue file */
+		if ( ( fptrs.fdesc = fopen ( file_desc, "wb" ) ) == NULL ) {
+			fprintf ( stderr, "%s: %s\n", file_desc, strerror ( errno ) ) ;
+			exit ( 1 );
+		}	
+
+		create_cue ( &fptrs, &img_struct, file_input ) ;
+	
+		if ( fptrs.fdesc ) fclose ( fptrs.fdesc );	
+		if ( fptrs.fdest ) fclose ( fptrs.fdest );
+
+
+		
+		/*free ( file_desc ); */
+		/*free ( file_input ); */
+
+		exit ( 0 );
+	}	
  
 	if ( iat_option.output_given ) {
 		if ( ( fptrs.fdest = fopen ( iat_option.output_arg, "wb" ) ) == NULL ) {
@@ -144,9 +229,16 @@ int main ( int argc, char* argv [ ] )
 			}
 		}
 	}
-		
+	
+	
 	if ( fptrs.fsource ) fclose ( fptrs.fsource );
 	if ( fptrs.fdest ) fclose ( fptrs.fdest );
+
+	
+	free ( file_desc ); 
+	free ( file_input );
+
+
 	
 	return ( 0 );
 }

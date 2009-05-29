@@ -1,0 +1,14 @@
+v0.2.git xx/xx/2009
+
+	Added support UDF
+	Added support export CUE
+	Improvement speed of image detection
+	Improvement debug mode
+	Added support SVCD/VCD
+	
+v0.1.3  08/03/2007 
+
+	Improvement image detection (now support nrg image)
+	Added build system (automake/autoconf)
+
+v0.1.2 first public release

@@ -23,7 +23,7 @@
 
 const char *gengetopt_args_info_purpose = "iat is a tool for detecting the structure of many types of image file";
 
-const char *gengetopt_args_info_usage = "Usage: IAT [OPTIONS]...";
+const char *gengetopt_args_info_usage = "Usage: " CMDLINE_PARSER_PACKAGE " [OPTIONS]...";
 
 const char *gengetopt_args_info_description = "";
 
@@ -33,6 +33,7 @@ const char *gengetopt_args_info_help[] = {
   "  -i, --input=image input    A string option for a filename",
   "  -o, --output=image output  A string option for a filename",
   "  -v, --verbose              verbose mode",
+  "      --debug                debug image",
   "\n Group: conversation\n  Convert your image in :",
   "      --cue                  Create Cuesheet of your image",
   "      --toc                  Create TOC of your image",
@@ -91,6 +92,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->input_given = 0 ;
   args_info->output_given = 0 ;
   args_info->verbose_given = 0 ;
+  args_info->debug_given = 0 ;
   args_info->cue_given = 0 ;
   args_info->toc_given = 0 ;
   args_info->iso_given = 0 ;
@@ -117,9 +119,10 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->input_help = gengetopt_args_info_help[2] ;
   args_info->output_help = gengetopt_args_info_help[3] ;
   args_info->verbose_help = gengetopt_args_info_help[4] ;
-  args_info->cue_help = gengetopt_args_info_help[6] ;
-  args_info->toc_help = gengetopt_args_info_help[7] ;
-  args_info->iso_help = gengetopt_args_info_help[8] ;
+  args_info->debug_help = gengetopt_args_info_help[5] ;
+  args_info->cue_help = gengetopt_args_info_help[7] ;
+  args_info->toc_help = gengetopt_args_info_help[8] ;
+  args_info->iso_help = gengetopt_args_info_help[9] ;
   
 }
 
@@ -241,6 +244,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "output", args_info->output_orig, 0);
   if (args_info->verbose_given)
     write_into_file(outfile, "verbose", 0, 0 );
+  if (args_info->debug_given)
+    write_into_file(outfile, "debug", 0, 0 );
   if (args_info->cue_given)
     write_into_file(outfile, "cue", 0, 0 );
   if (args_info->toc_given)
@@ -411,7 +416,7 @@ int update_arg(void *field, char **orig_field,
                cmdline_parser_arg_type arg_type,
                int check_ambiguity, int override,
                int no_free, int multiple_option,
-               const char *long_opt, int short_opt,/*char short_opt,*/
+               const char *long_opt, char short_opt,
                const char *additional_error)
 {
   char *stop_char = 0;
@@ -424,9 +429,9 @@ int update_arg(void *field, char **orig_field,
 
   if (!multiple_option && prev_given && (*prev_given || (check_ambiguity && *field_given)))
     {
-      if (short_opt != (char) '-')
+      if (short_opt != '-')
         fprintf (stderr, "%s: `--%s' (`-%c') option given more than once%s\n", 
-               package_name, long_opt, (char) short_opt,
+               package_name, long_opt, short_opt,
                (additional_error ? additional_error : ""));
       else
         fprintf (stderr, "%s: `--%s' option given more than once%s\n", 
@@ -520,6 +525,7 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
         { "input",	1, NULL, 'i' },
         { "output",	1, NULL, 'o' },
         { "verbose",	0, NULL, 'v' },
+        { "debug",	0, NULL, 0 },
         { "cue",	0, NULL, 0 },
         { "toc",	0, NULL, 0 },
         { "iso",	0, NULL, 0 },
@@ -598,8 +604,22 @@ cmdline_parser_internal (int argc, char * const *argv, struct gengetopt_args_inf
           break;
 
         case 0:	/* Long option with no short option */
+          /* debug image.  */
+          if (strcmp (long_options[option_index].name, "debug") == 0)
+          {
+          
+          
+            if (update_arg( 0 , 
+                 0 , &(args_info->debug_given),
+                &(local_args_info.debug_given), optarg, 0, 0, ARG_NO,
+                check_ambiguity, override, 0, 0,
+                "debug", '-',
+                additional_error))
+              goto failure;
+          
+          }
           /* Create Cuesheet of your image.  */
-          if (strcmp (long_options[option_index].name, "cue") == 0)
+          else if (strcmp (long_options[option_index].name, "cue") == 0)
           {
           
             if (args_info->conversation_group_counter && override)
@@ -779,7 +799,7 @@ cmdline_parser_string_ext(const char *cmdline, struct gengetopt_args_info *args_
   argc = cmdline_parser_create_argv(cmdline, &argv_ptr, prog_name);
   
   result =
-    cmdline_parser_internal ( ( int ) argc, argv_ptr, args_info, params, 0);
+    cmdline_parser_internal (argc, argv_ptr, args_info, params, 0);
   
   if (argv_ptr)
     {

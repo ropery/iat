@@ -56,9 +56,19 @@
 extern "C" {
 #endif	/* __cplusplus */
 
+/* --- @is_udf_imager@ --- *
+ *
+ * Arguments:   @unsigned char* header@ = the header information
+ *
+ * Returns:     zero if success, @-1@ otherwise
+ *
+ * Use:         Return the detection of the header.
+ */
+int is_udf_image  ( unsigned char* header );
+
 /* --- @calculate_pregap_length@ --- *
  *  
- * Arguments: 	@int cd_id_start@ = bytes when is detect primary volume of CD/DVD
+ * Arguments: 	@off_t cd_id_start@ = bytes when is detect primary volume of CD/DVD
  *		@int block@ = block size of image 
  *		@int header@ = header of block  	
  * 
@@ -70,8 +80,8 @@ off_t calculate_pregap_length ( off_t  cd_id_start, image_struct* img_struct, in
 
 /* --- @calculate_block_size@ --- *
  *
- * Arguments:	@int cd_id_start@ = bytes when is detect primary volume of CD/DVD 
- *		@int cd_id_end@	= bytes when is present next volume of CD/DVD
+ * Arguments:	@off_t cd_id_start@ = bytes when is detect primary volume of CD/DVD 
+ *		@off_t cd_id_end@	= bytes when is present next volume of CD/DVD
  * 
  * Returns :	block size.
  * 

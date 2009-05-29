@@ -43,6 +43,37 @@
 #include "util.h"
 #endif
 
+/* ---@smart_name@ ---*
+*
+* Arguments:	@char *new@ = pointer to new name
+*		@char *original@ = pointer to original base name
+*		@char *ext@ = pointer a new extention
+*
+* Use:		Create name for file
+*
+*/
+void smart_name ( char* new, char* original, char* ext)
+{
+	strcpy ( new, original );
+	strcpy ( new  + strlen ( new ) - sizeof ( ext ), ext);
+
+}
+
+/* --- @lba2msf@ --- *
+ *
+ * Arguments:   @off_t lba@ = logical block addres size
+ *              @msf_mode_block *msf_block@ = pointer struct of BCD 
+ *
+ *
+ * Use:         Reads LBA and translate msf.
+ */
+void lba2msf ( off_t lba, msf_mode_block* msf_block )
+{
+	(*( msf_block->frame  ) ) = lba % 75;
+	(*( msf_block->second ) ) = ( ( lba / 75 ) + 2 ) % 60;
+	(*( msf_block->minute ) ) = ( ( lba / 75 ) + 2 ) / 60;
+}
+
 /* --- @get_file_size@ --- *
  *
  * Arguments:	@FILE *fptr@ = pointer to FILE
@@ -61,13 +92,13 @@ off_t  get_file_size ( FILE* fptr )
 /* --- @set_file_pointer@ --- *
  *
  * Arguments:	@FILE *fptr@ = pointer to FILE
- * 		@long n_pos@ = the number of bytes to move
+ * 		@off_t n_pos@ = the number of bytes to move
  *
  * Returns:	the number of positions the file pointer moved, @-1@ otherwise
  *
  * Use:		Moves the file pointer to the number of position from start.
  */
-off_t  set_file_pointer ( FILE* fptr, long n_pos )
+off_t  set_file_pointer ( FILE* fptr, off_t n_pos )
 {
 	if ( get_file_size ( fptr ) < n_pos ) return ( -1 );
 	fseeko ( fptr, 0L, SEEK_SET );

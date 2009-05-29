@@ -21,12 +21,12 @@ extern "C" {
 
 #ifndef CMDLINE_PARSER_PACKAGE
 /** @brief the program name */
-#define CMDLINE_PARSER_PACKAGE "IAT"
+#define CMDLINE_PARSER_PACKAGE PACKAGE
 #endif
 
 #ifndef CMDLINE_PARSER_VERSION
 /** @brief the program version */
-#define CMDLINE_PARSER_VERSION "0.2DEV"
+#define CMDLINE_PARSER_VERSION VERSION
 #endif
 
 /** @brief Where the command line options are stored */
@@ -41,6 +41,7 @@ struct gengetopt_args_info
   char * output_orig;	/**< @brief A string option for a filename original value given at command line.  */
   const char *output_help; /**< @brief A string option for a filename help description.  */
   const char *verbose_help; /**< @brief verbose mode help description.  */
+  const char *debug_help; /**< @brief debug image help description.  */
   const char *cue_help; /**< @brief Create Cuesheet of your image help description.  */
   const char *toc_help; /**< @brief Create TOC of your image help description.  */
   const char *iso_help; /**< @brief Create ISO9660 image help description.  */
@@ -50,6 +51,7 @@ struct gengetopt_args_info
   unsigned int input_given ;	/**< @brief Whether input was given.  */
   unsigned int output_given ;	/**< @brief Whether output was given.  */
   unsigned int verbose_given ;	/**< @brief Whether verbose was given.  */
+  unsigned int debug_given ;	/**< @brief Whether debug was given.  */
   unsigned int cue_given ;	/**< @brief Whether cue was given.  */
   unsigned int toc_given ;	/**< @brief Whether toc was given.  */
   unsigned int iso_given ;	/**< @brief Whether iso was given.  */

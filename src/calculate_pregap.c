@@ -43,18 +43,37 @@
 #include "calculate_pregap.h"
 #endif
 
+int is_udf_image  ( unsigned char* header )
+{
+        int number = 7;
+        int size = 5;
+        /* UDF HEADER */
+        unsigned const char udf_header [ 7 ] [ 5 ] = {
+                { 0x42, 0x45, 0x41, 0x30, 0x31 }, /* BEA01 */
+                { 0x42, 0x4F, 0x4F, 0x54, 0x32 }, /* BOOT2 */
+                { 0x43, 0x44, 0x30, 0x30, 0x31 }, /* CD001 */
+                { 0x43, 0x44, 0x57, 0x30, 0x32 }, /* CDW02 */
+                { 0x4E, 0x5D, 0x5C, 0x30, 0x32 }, /* NSR02 */
+                { 0x4E, 0x5D, 0x5C, 0x30, 0x33 }, /* NSR03 */
+                { 0x54, 0x45, 0x41, 0x30, 0x31 }  /* TEA01 */
+        };
 
-/* SUB-HEADER */
-/*unsigned const char SUB_HEADER_ID_1 [ 8 ] = { 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x08, 0x00 } ; 
-unsigned const char SUB_HEADER_ID_2 [ 8 ] = { 0x00, 0x00, 0x88, 0x00, 0x00, 0x00, 0x88, 0x00 } ;
-unsigned const char SUB_HEADER_ID_3 [ 8 ] = { 0x00, 0x00, 0x89, 0x00, 0x00, 0x00, 0x89, 0x00 } ;
-unsigned const char SUB_HEADER_ID_4 [ 8 ] = { 0x00, 0x00, 0x09, 0x00, 0x00, 0x00, 0x09, 0x00 } ;
-*/
+        int n_count = 0;
+        int n_return_value = ERROR;
+        for ( n_count = 0; n_count < number; n_count++ ) {
+                if ( ( !memcmp ( header, udf_header [ n_count ], size ) ) ) {
+                        n_return_value = AOK;
+                        break;
+                }
+        }
+
+        return ( n_return_value );
+}
 
 
 /* --- @calculate_pregap_length@ --- *
  *  
- * Arguments: 	@int cd_id_start@ = bytes when is detect primary volume of CD/DVD
+ * Arguments: 	@off_t cd_id_start@ = bytes when is detect primary volume of CD/DVD
  *		@int block@ = block size of image 
  *		@int header@ = header of block  	
  * 
@@ -64,13 +83,13 @@ unsigned const char SUB_HEADER_ID_4 [ 8 ] = { 0x00, 0x00, 0x09, 0x00, 0x00, 0x00
  */
 off_t calculate_pregap_length ( off_t  cd_id_start, image_struct* img_struct, int header )
 {
-	return ( ( cd_id_start - ( img_struct -> block * 16 ) ) - header ); 
+	return ( ( cd_id_start - ( img_struct -> block * 16 ) ) - header - 1); 
 }
 
 /* --- @calculate_block_size@ --- *
  *
- * Arguments:	@int cd_id_start@ = bytes when is detect primary volume of CD/DVD 
- *		@int cd_id_end@	= bytes when is present next volume of CD/DVD
+ * Arguments:	@off_t cd_id_start@ = bytes when is detect primary volume of CD/DVD 
+ *		@off_t cd_id_end@	= bytes when is present next volume of CD/DVD
  * 
  * Returns :	block size.
  * 
@@ -87,10 +106,6 @@ int calculate_block_size (  off_t cd_id_start, off_t cd_id_end, image_struct* im
 		( ( block % block_sizes [ 2 ] ) == 0 ) ? block_sizes [ 2 ] :
 		block_sizes [ 3 ];
 
-	/*for (; img_struct -> block > 2448; img_struct -> block /= 2 );
-	if ( img_struct -> block < 2048 ) img_struct -> block *= 2;
-	*/
-
 	return ( img_struct -> block );	
 }
 
@@ -106,12 +121,10 @@ int calculate_block_size (  off_t cd_id_start, off_t cd_id_end, image_struct* im
 off_t calculate_pregap ( file_ptrs* fptrs,  image_struct*  img_struct ) 
 {
 	unsigned char	buf [ 12 ];
-	/*int		img_size ;*/
 	off_t		img_size ;
         off_t 		n_loop = 0;
 	off_t		start = 32768; 
-	/*int		start = 32768;  first primary volume  at 16 * BLOCK */
-	off_t		cd_id_start = 0;
+	off_t		cd_id_start = -1;
 	off_t		cd_id_end = 0;
 	int		header = 0;
 
@@ -141,9 +154,7 @@ off_t calculate_pregap ( file_ptrs* fptrs,  image_struct*  img_struct )
 		
 			if ( ( header != 16 ) && ( header != 24 ) )
 				header += 16;
-		} /*else if ( ( !memcmp ( SUB_HEADER_ID_1, buf, 8 ) ) || ( !memcmp ( SUB_HEADER_ID_2, buf, 8 ) ) ||
-			( !memcmp ( SUB_HEADER_ID_3, buf, 8 ) ) || ( !memcmp ( SUB_HEADER_ID_4, buf, 8 ) ) ) {*/
-			
+		} 
 		else if ( !is_svcd_sub_header ( (unsigned char*) buf ) ) {
 			if ( (	img_struct -> type == 0 ) || ( img_struct -> type == 2 ) ) {
 				img_struct -> type += 1;
@@ -152,13 +163,25 @@ off_t calculate_pregap ( file_ptrs* fptrs,  image_struct*  img_struct )
 			if ( ( header != 8 ) && ( header != 24 ) )
 				header += 8;
 			 
-		} else if ( !memcmp ( ISO_9660_START, buf, 8 ) ) {
+		} else 
+			if ( !is_udf_image ( ( unsigned char *) buf ) ) {
+				if ( cd_id_start < 0 ) {
+					cd_id_start = n_loop;
+					img_struct -> type +=2;
+				} else {
+					cd_id_end = n_loop;
+					n_loop = img_size;
+				}
+			
+			/*if ( !memcmp ( ISO_9660_START, buf, 8 ) ) {
 			cd_id_start = n_loop;
 			n_loop += 1023;
 			img_struct -> type += 2;
 		} else if ( !memcmp ( ISO_9660_END, buf, 8 ) ) {
 			cd_id_end = n_loop;
 			n_loop = img_size;
+		*/
+		
 		} else if ( !memcmp ( XA_ID, buf, 8 ) ) { 
 			if ( img_struct -> type <= 7 )
 				img_struct -> type += 7;
@@ -170,9 +193,8 @@ off_t calculate_pregap ( file_ptrs* fptrs,  image_struct*  img_struct )
 	
 	/* Detect Header bytes */
 	img_struct -> pregap = calculate_pregap_length ( cd_id_start, img_struct , header );
-	printf(" PREGAP (%d)\n", img_struct -> pregap );	
-	printf(" BLOCK (%d)\n", img_struct -> block );
 
 	return ( 0 );	
 }
+
 

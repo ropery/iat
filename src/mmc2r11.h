@@ -64,18 +64,33 @@ extern "C" {
 #define MODE_FIRST_RUN_OUT	0x00E0
 
 typedef struct msf_mode_block {
-	unsigned char msf	 	[ MMCLEN ( 0, 3 ) ];
-	unsigned char mode	 	[ MMCBYTE( 4, 4 ) ];
-} msf_mode_block;
-
-typedef struct sync_header_block {
 	unsigned char minute		[ MMCBYTE ( 0, 0 ) ];
 	unsigned char second		[ MMCBYTE ( 1, 1 ) ];
 	unsigned char frame		[ MMCBYTE ( 2, 2 ) ];
 	unsigned char mode		[ MMCBYTE ( 3, 3 ) ];
-	unsigned char misc		[ MMCLEN ( 4, 8 ) ];
+} msf_mode_block;
+
+typedef struct sync_header_block {
+	unsigned char sync_header	[ MMCLEN ( 0, 12 ) ];
 	msf_mode_block			msf_block;
 } sync_header_block;
+
+typedef struct copy_sub_header {
+	unsigned char file		[ MMCBYTE ( 0, 0 ) ];
+	unsigned char channel		[ MMCBYTE ( 1, 1 ) ];
+	unsigned char sub_mode		[ MMCBYTE ( 2, 2 ) ];
+	unsigned char coding		[ MMCBYTE ( 3, 3 ) ];
+} copy_sub_header; 
+
+#define SUB_MODE_EOF		0x80
+#define SUB_MODE_RT		0x40
+#define SUB_MODE_FORM2		0x20
+#define SUB_MODE_TRIGGER	0x10
+#define SUB_MODE_DATA		0x08
+#define SUB_MODE_AUDIO		0x04
+#define SUB_MODE_VIDEO		0x02	
+#define SUB_MODE_EOR		0x01
+
 
 typedef struct sub_header_block {
 	unsigned char first_copy 	[ MMCLEN ( 0, 4 ) ];	
