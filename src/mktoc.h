@@ -38,8 +38,8 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-#ifndef MKCUE_H
-#define MKCUE_H
+#ifndef MKTOC_H
+#define MKTOC_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -49,155 +49,160 @@
 extern "C" {
 #endif  /* __cplusplus */
 
-
 #ifndef MKCORE_H
 #include "mkcore.h"
 #endif
 
 
 
-/* --- @print_cue_index@ --- *
- *
- * Arguments:   @file_ptrs *fptrs@ = input file
- * 		@struct_cue *cue@ =  pointer struct of cue sheet
- *
- *
- * Returns:	---	
- *
- * Use:	 	print index of image.
- */
-void  print_cue_index ( file_ptrs* fptrs, struct_cue *cue );
+/*
+#define TOC_AUDIO 		0
+#define TOC_MODE1 		1
+#define TOC_MODE1_RAW		2
+#define TOC_MODE2		3
+#define TOC_MODE2_FORM1		4
+#define TOC_MODE2_FORM2		5
+#define TOC_MODE2_FORM_MIX 	6
+#define TOC_MODE2_RAW		7
 
-/* --- @print_cue_track@ --- *
+*/
+/* --- @print_toc_time@ --- *
  *
  * Arguments:   @file_ptrs *fptrs@ = input file
- * 		@struct_cue *cue@ =  pointer struct of cue sheet
+ * 		@struct_toc *toc@ =  pointer struct of toc sheet
  *
  *
  * Returns:	---
  *
- * Use:	 	print track of image.
+ * Use:	 	print time of image.
  */
-void print_cue_track ( file_ptrs* fptrs, struct_cue* cue );
+void print_toc_time ( file_ptrs* fptrs, struct_toc *toc );
 
-/* --- @print_cue_file --- *
+/* --- @print_toc_mode@ --- *
  *
  * Arguments:   @file_ptrs *fptrs@ = input file
- * 		@struct_cue *cue@ =  pointer struct of cue sheet
- *
- *
- * Returns:	---	
- *
- * Use:	 	print file name of image.
- */
-void print_cue_file ( file_ptrs* fptrs, char *file_input );
-
-/* --- @print_cue@ --- *
- *
- * Arguments:   @file_ptrs *fptrs@ = input file
- * 		 @struct_cue *cue@ =  pointer struct of cue sheet
- *
- *
- * Returns:	mode of image, @-1@ otherwise
- *
- *  Use:	print cue sheet of image.	
- */
-/*
-void print_cue ( file_ptrs* fptrs, struct_cue* cue );
-*/
-/* --- @is_mode@ --- *
- *
- * Arguments:   @file_ptrs *fptrs @ = input file
+ *		@struct_toc *toc@ = pointer struct of toc
  * 		@image_struct *img_struct@ = pointer struct of type image and pregap of image
  *
  *
- * Returns:	mode of image, @-1@ otherwise
+ * Returns:	---
  *
- * Use:         read first block of image and return type of mode.
+ * Use:         read first block of image and  print type of mode.
  */
-int is_mode ( file_ptrs* fptrs, image_struct* img_struct );
+void print_toc_mode ( file_ptrs* fptrs, struct_toc* toc, image_struct* img_struct );
 
-/* --- @create_first_track@ --- *
+/* --- @print_toc_datafile@ --- *
  *
- * Arguments:   @file_ptrs *fptrs @ = input file
+ * Arguments:   @file_ptrs *fptrs@ = input file
+ *		@char *file_input@  =  name of input file
+ *
+ *
+ * Returns:     ---
+ *
+ * Use:         print name of datafile.
+ */
+void print_toc_datafile ( file_ptrs* fptrs, char* file_input );
+
+/* --- @print_toc_track@ --- *
+ *
+ * Arguments:   @file_ptrs *fptrs@ = input file
+ *		@struct_toc *toc@ = pointer struct of toc
+ *
+ *
+ * Returns:     ---
+ *
+ * Use:         print track of image.
+ */
+void print_toc_track ( file_ptrs* fptrs, struct_toc* toc );
+
+/* --- @print_toc_vcd_time@ --- *
+ *
+ * Arguments:   @file_ptrs *fptrs@ = input file
+ *		@struct_toc *toc@ = pointer struct of toc
+ *		@image_struct *img_struct@ = pointer struct of type image and pregap of image
+ * 		@off_t l_loop@ = length of track;
+ *		@off_t loop_last@ = loop end last track;
+ *
+ *
+ * Returns:     ---
+ *
+ * Use:         print time of track. 
+ */
+
+void print_toc_vcd_time ( file_ptrs* fptrs, struct_toc* toc, image_struct* img_struct, 
+				off_t l_loop, off_t loop_last);
+
+/* --- @toc_first_track@ --- *
+ *
+ * Arguments:   @file_ptrs *fptrs@ = input file
  * 		@image_struct *img_struct@ = pointer struct of type image and pregap of image
  *		@char *file_input@  =  name of input file
- *		@struct_cue *cue@ = pointer struct of cuesheet
+ *		@struct_toc *toc@ = pointer struct of cuesheet
  *
  * Returns:     ---
  *
  * Use:         detect track of image.
  */
-void create_first_track ( file_ptrs* fptrs, image_struct* img_struct, char *file_input, struct_cue* cue );
+void toc_first_track ( file_ptrs* fptrs, image_struct* img_struct, char *file_input, struct_toc* toc );
 
-/* --- @create_raw_cue@ --- *
+/* --- @create_raw_toc@ --- *
  *
- * Arguments:   @file_ptrs *fptrs @ = input file
+ * Arguments:   @file_ptrs *fptrs@ = input file
  * 		@image_struct *img_struct@ = pointer struct of type image and pregap of image
  *		@char *file_input@  = name of input file
+ *		
  *
  *
  * Returns:     ---
  *
- * Use:         generate a cuesheet for raw image.
+ * Use:         generate a toc for raw image.
  */
-void create_raw_cue ( file_ptrs* fptrs, image_struct* img_struct, char *file_input );
+void create_raw_toc  ( file_ptrs* fptrs, image_struct* img_struct, char *file_input );
 
-/* --- @create_iso_cue@ --- *
+/* --- @create_iso_toc@ --- *
  *
- * Arguments:   @file_ptrs *fptrs @ = input file
+ * Arguments:   @file_ptrs *fptrs@ = input file
  * 		@image_struct *img_struct@ = pointer struct of type image and pregap of image
  *		@char *file_input@  = name of input file
+ *		
  *
  *
  * Returns:     ---
  *
  * Use:         generate a cuesheet for iso/udf image.
  */
-void create_iso_cue ( file_ptrs* fptrs, image_struct* img_struct, char *file_input );
+void create_iso_toc ( file_ptrs* fptrs, image_struct* img_struct, char *file_input );
 
-/* --- @track_vcd_cue@ --- *
- *
- * Arguments:   @file_ptrs *fptrs @ = input file
- * 		@image_struct *img_struct@ = pointer struct of type image and pregap of image
- *		@struct_cue *cue@ = pointer struct of cuesheet
- *		@off_t n_loop@  = number of byte from where the block starts
- *
- *
- * Returns:	Zeor on success, @-1@ on error.     
- *
- * Use:         detect track of VCD/SVCD image.
- */
-int track_vcd_cue ( file_ptrs* fptrs, image_struct* img_struct, struct_cue* cue, off_t n_loop );
- 
-/* --- @create_vcd_cue@ --- *
+/* --- @create_vcd_toc@ --- *
  *
  * Arguments:   @file_ptrs *fptrs @ = input file
  * 		@image_struct *img_struct@ = pointer struct of type image and pregap of image
  *		@char *file_input@  = name of input file
  *
  *
- * Returns:     Zeor on success, @-1@ on error. 
+ * Returns:     Zeor on success, @-1@ on error.
  *
- * Use:         generate a cuesheet for vcd.
+ * Use:         generate a TOC file for vcd.
  */
-int create_vcd_cue ( file_ptrs* fptrs, image_struct* img_struct, char *file_input );
+int create_vcd_toc ( file_ptrs* fptrs, image_struct* img_struct, char *file_input );
 
 
-/* --- @create_cue@ --- *
+/* --- @create_toc@ --- *
  *
  * Arguments:   @file_ptrs *fptrs @ = input file
  * 		@image_struct *img_struct@ = pointer struct of type image and pregap of image
+ *		@char *file_input@  = name of input file
+ *		
  *
+ * Returns:     Zeor on success, @-1@ on error.
  *
- * Returns:     Zeor on success, @-1@ on error. 
- *
- * Use:         Get info from file for generate a cuesheet file descriptor.
+ * Use:         Get info from file for generate a TOC file descriptor.
  */
-int create_cue ( file_ptrs* fptrs,  image_struct*  img_struct, char *file_input );
+int create_toc ( file_ptrs* fptrs, image_struct* img_struct, char *file_input );
+
 
 #ifdef __cplusplus
 }       /* extern "C" */
 #endif  /* __cplusplus */
 
-#endif /* MKCUE_H */
+#endif /* MKTOC_H */

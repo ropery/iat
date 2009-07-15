@@ -59,6 +59,28 @@ extern "C" {
 #include "mmc2r11.h"
 #endif
 
+/* ---@free_allocated_memory@ ---*
+*
+* Arguments:	@void* pointer_to_free@ = pointer to be freed
+*
+* Returns:	---
+*
+* Use:		Frees the allocated memory.
+*
+*/
+void free_allocated_memory ( void* pointer_to_free );
+
+/* ---@copy_string@ ---*
+*
+* Arguments:	@char* cp_string@ = pointer to string to be copied
+*
+* Returns:	The copied string if successful, @NULL@ otherwise.
+*
+* Use:		Copies the string to the newly allocated space.
+*
+*/
+unsigned char* copy_string ( char* cp_string );
+
 /* ---@smart_name@ ---*
 *
 * Arguments:	@char *new@ = pointer to new name
@@ -68,8 +90,11 @@ extern "C" {
 * Use:		Create name for file
 *
 */
-void smart_name ( char* new, char* original, char* ext);
+char* smart_name ( const char* original, char* ext );
 
+
+/*unsigned char* smart_name ( char* cp_string, char* ext_string );
+*/
 /* --- @lba2msf@ --- *
  *
  * Arguments:   @off_t lba@ = logical block addres size
@@ -110,6 +135,20 @@ off_t  set_file_pointer ( FILE* fptr, off_t n_pos );
  * Use:		Write to an iso file.
  */
 int is_svcd_sub_header ( unsigned char* header );
+
+/* --- @img_2_img@ --- *
+ *
+ * Arguments:   @file_ptrs *fptrs@ = input file
+ * 		@int block_old@ = size of origin block
+ *		@int block_new@ = size of new block
+ *		@off_t pregap@ = length of pregap
+ *
+ *
+ * Returns:	mode of image, @-1@ otherwise
+ *
+ * Use:		convert image to image.  
+ */
+int img_2_img ( file_ptrs* fptrs,  int block_old, int block_new, off_t pregap );
 
 #ifdef __cplusplus
 } 	/* extern "C" */

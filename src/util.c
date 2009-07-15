@@ -43,6 +43,42 @@
 #include "util.h"
 #endif
 
+/* ---@free_allocated_memory@ ---*
+*
+* Arguments:	@void* pointer_to_free@ = pointer to be freed
+*
+* Returns:	---
+*
+* Use:		Frees the allocated memory.
+*
+*/
+void free_allocated_memory ( void* pointer_to_free )
+{
+	if ( pointer_to_free ) free ( pointer_to_free );
+}
+
+/* ---@copy_string@ ---*
+*
+* Arguments:	@char* cp_string@ = pointer to string to be copied
+*
+* Returns:	The copied string if successful, @NULL@ otherwise.
+*
+* Use:		Copies the string to the newly allocated space.
+*
+*/
+unsigned char* copy_string ( char* cp_string )
+{
+	unsigned char* return_value = NULL;
+	int length = 0;
+	length = ( strlen ( cp_string ) + 1 );
+	return_value = ( unsigned char* ) malloc ( sizeof ( unsigned char ) * length );
+	if ( return_value ) {
+		memset ( return_value, 0, length );
+		memmove ( return_value, cp_string, ( length - 1 ) );
+	}
+	return ( return_value );
+}
+
 /* ---@smart_name@ ---*
 *
 * Arguments:	@char *new@ = pointer to new name
@@ -52,13 +88,73 @@
 * Use:		Create name for file
 *
 */
-void smart_name ( char* new, char* original, char* ext)
+
+
+char* smart_name ( const char* original, char* ext )
 {
-	strcpy ( new, original );
-	strcpy ( new  + strlen ( new ) - sizeof ( ext ), ext);
+	unsigned char* buffer = NULL;
+	char* tmp_buffer = NULL;
+	int length = 0;
+	int file_ext_lenght = 0;
+
+	if ( ( NULL == original ) || ( NULL == ext ) )return ( NULL );
+
+	if ( NULL != ( tmp_buffer = strrchr ( original, '.' ) ) ) {
+		if ( !memcmp ( ( tmp_buffer + 1 ), ext, strlen ( ext ) ) ) {
+			if ( 0 > ( length = tmp_buffer - original ) ) return ( buffer );
+			file_ext_lenght += strlen ( ext ); /* to include the extension */
+			file_ext_lenght += 4; /* for including '_0.' and 'null' char */
+
+			buffer = ( unsigned char* ) malloc ( sizeof ( unsigned char ) * ( length + file_ext_lenght ) );
+			if ( buffer ) {
+				memset ( buffer, 0, ( length + file_ext_lenght ) );
+				memmove ( buffer, original, length );
+				memmove ( buffer + length , "_0.", 3 );
+				memmove ( buffer + ( length + 3 ) , ext, strlen ( ext ) );
+			}
+		} else {
+			if ( 0 > ( length = tmp_buffer - original ) ) return ( buffer );
+			file_ext_lenght += strlen ( ext ); /* to include the extension */
+			file_ext_lenght += 2; /* for including '.' and 'null' char */
+
+			buffer = ( unsigned char* ) malloc ( sizeof ( unsigned char ) * ( length + file_ext_lenght ) );
+			if ( buffer ) {
+				memset ( buffer, 0, ( length + file_ext_lenght ) );
+				memmove ( buffer, original, length );
+				memmove ( buffer + length , ".", 1 );
+				memmove ( buffer + ( length + 1 ) , ext, strlen ( ext ) );
+			}
+		}
+	} else {
+		file_ext_lenght += strlen ( ext ); /* to include the extension */
+		file_ext_lenght += 2; /* for including '.' and 'null' char */
+		length = strlen ( original );
+
+		buffer = ( unsigned char* ) malloc ( sizeof ( unsigned char ) * ( length + file_ext_lenght ) );
+		if ( buffer ) {
+			memset ( buffer, 0, ( length + file_ext_lenght ) );
+			memmove ( buffer, original, length );
+			memmove ( buffer + length , ".", 1 );
+			memmove ( buffer + ( length + 1 ) , ext, strlen ( ext ) );
+		}
+	}
+
+	return ( buffer );
 
 }
 
+/*
+unsigned char* smart_name ( char* cp_string, char* ext_string )
+{
+	unsigned char* return_value = NULL;
+	
+	return_value = strtok ( cp_string , "." );
+
+	strncat( return_value, ext_string , ( strlen ( ext_string ) ) );
+	printf ( "smart name (%s)\n", return_value );
+	return ( return_value );		
+}
+*/
 /* --- @lba2msf@ --- *
  *
  * Arguments:   @off_t lba@ = logical block addres size
@@ -132,6 +228,45 @@ int is_svcd_sub_header ( unsigned char* header )
 			break;
 		}
 	}
+
+	return ( n_return_value );
+}
+
+/* --- @img_2_img@ --- *
+ *
+ * Arguments:   @file_ptrs *fptrs@ = input file
+ * 		@int block_old@ = size of origin block
+ *		@int block_new@ = size of new block
+ *		@off_t pregap@ = length of pregap
+ *
+ *
+ * Returns:	mode of image, @-1@ otherwise
+ *
+ * Use:		convert image to image. 
+ */
+int img_2_img ( file_ptrs* fptrs,  int block_old, int block_new, off_t pregap )
+{
+        int	n_return_value = ERROR;
+	char	*fimg =  malloc ( sizeof (char) * block_old); 
+	off_t	n_loop;
+	off_t	n_img_size;				
+
+	if ( ( n_img_size = get_file_size ( fptrs -> fsource ) ) < 1 ) return ( n_return_value ); /* The image file is empty */
+
+	set_file_pointer ( fptrs -> fsource, pregap );
+
+	for ( n_loop = pregap  ; n_loop <  n_img_size ; n_loop += block_old ) 
+	{
+       		progress_bar ( ( ( n_loop + 1 ) * 100 ) / n_img_size );
+		fread  ( fimg , 1, block_old, fptrs -> fsource );	
+		fwrite ( fimg, 1, block_new, fptrs -> fdest );
+		n_return_value = AOK;
+	}
+
+	free ( fimg );	
+
+	progress_bar ( 100 );
+	printf ( "\n" );
 
 	return ( n_return_value );
 }

@@ -41,43 +41,7 @@
 #include "mkcue.h"
 #endif
 
-/* --- @img_2_bin@ --- *
- *
- * Arguments:   @file_ptrs *fptrs@ = input file
- * 		@int block_old@ = size of origin block
- *		@int block_new@ = size of new block
- *		@off_t pregap@ = length of pregap
- *
- *
- * Returns:	mode of image, @-1@ otherwise
- *
- * Use:		convert image to image as compatible for cuesheet file. 
- */
-img_2_bin ( file_ptrs* fptrs,  int block_old, int block_new, off_t pregap )
-{
-        int	n_return_value = ERROR;
-	char	*fimg =  malloc ( sizeof (char) * block_old); 
-	off_t	n_loop;
-	off_t	n_img_size;				
 
-
-	if ( ( n_img_size = get_file_size ( fptrs -> fsource ) ) < 1 ) return ( n_return_value ); /* The image file is empty */
-
-
-	set_file_pointer ( fptrs -> fsource, pregap );
-
-
-		for ( n_loop = pregap  ; n_loop <  n_img_size ; n_loop += block_old ) {
-       			progress_bar ( ( ( n_loop + 1 ) * 100 ) / n_img_size );
-                	fread  ( fimg , 1, block_old, fptrs -> fsource );	
-			fwrite ( fimg, 1, block_new, fptrs -> fdest );
-		}
-
-	free ( fimg );	
-
-	progress_bar ( 100 );
-	return ( 0 );
-}
 
 /* --- @print_cue_index@ --- *
  *
@@ -124,22 +88,6 @@ void print_cue_file ( file_ptrs* fptrs, char *file_input )
 	fprintf ( fptrs->fdesc, "FILE \"%s\" BINARY\n", file_input);
 }
 
-/* --- @print_cue@ --- *
- *
- * Arguments:   @file_ptrs *fptrs@ = input file
- * 		 @struct_cue *cue@ =  pointer struct of cue sheet
- *
- *
- * Returns:	mode of image, @-1@ otherwise
- *
- *  Use:	print cue sheet of image.	
- */
-int print_cue ( file_ptrs* fptrs, struct_cue* cue )
-{
-	fprintf( fptrs->fdesc, "TRACK %02d MODE%d/%d\n",  cue->track , cue->mode, cue->block  );
-	fprintf( fptrs->fdesc, " INDEX %d %02d:%02d:%02d\n", cue->index , cue->minute ,  cue->second-2, cue->frame );	
-}
-
 /* --- @is_mode@ --- *
  *
  * Arguments:   @file_ptrs *fptrs @ = input file
@@ -166,11 +114,13 @@ int is_mode ( file_ptrs* fptrs, image_struct* img_struct )
 			break;
 		case 2352:
 		case 2448:	
+			
 			n_loop = img_struct -> pregap + 12;
 
 			set_file_pointer ( fptrs -> fsource, ( n_loop  ) );
 
 			fread ( &msf_block, sizeof ( msf_mode_block ), 1,  fptrs->fsource );
+
 			switch  ( *( msf_block.mode ) ) {
 				case 0: 
 					mode = 0;
@@ -205,19 +155,18 @@ int is_mode ( file_ptrs* fptrs, image_struct* img_struct )
  *
  * Use:         detect track of image.
  */
-int create_first_track ( file_ptrs* fptrs, image_struct* img_struct, char *file_input, struct_cue* cue )
+void create_first_track ( file_ptrs* fptrs, image_struct* img_struct, char *file_input, struct_cue* cue )
 {	
 	off_t lba = 0;
 	
 	msf_mode_block msf_block;
+
+	if ( img_struct-> block == 2448 ) img_struct->block = 2352;
 	
 	/* inizialization first track */
 	cue->mode = is_mode ( fptrs, img_struct );
 	cue->block = img_struct->block;
 
-	if ( cue->block == 2448 )
-		cue->block = 2352;
-	
 	cue->track = 1;
 	cue->index = 1;
 	
@@ -245,21 +194,13 @@ int create_first_track ( file_ptrs* fptrs, image_struct* img_struct, char *file_
  *
  * Use:         generate a cuesheet for raw image.
  */
-int create_raw_cue ( file_ptrs* fptrs, image_struct* img_struct, char *file_input )
+void create_raw_cue ( file_ptrs* fptrs, image_struct* img_struct, char *file_input )
 {
 
 	struct_cue cue;
 
-
-	if ( ( fptrs->fdest ) ) {
-		
-		img_2_bin ( fptrs,  img_struct->block, 2352, img_struct->pregap );
-		
-	};
-
 	create_first_track ( fptrs, img_struct, file_input, &cue );	
 
-	return ( 0 );
 }
 
 /* --- @create_iso_cue@ --- *
@@ -274,16 +215,11 @@ int create_raw_cue ( file_ptrs* fptrs, image_struct* img_struct, char *file_inpu
  *
  * Use:         generate a cuesheet for iso/udf image.
  */
-int create_iso_cue ( file_ptrs* fptrs, image_struct* img_struct, char *file_input )
+void create_iso_cue ( file_ptrs* fptrs, image_struct* img_struct, char *file_input )
 {
 	struct_cue cue;
 
-	if ( fptrs->fdest ) 
-		img_2_bin ( fptrs,  img_struct->block, 2048, img_struct->pregap );
-
 	create_first_track ( fptrs, img_struct, file_input, &cue );	
-	
-	return ( 0 );
 
 }
 
@@ -295,35 +231,17 @@ int create_iso_cue ( file_ptrs* fptrs, image_struct* img_struct, char *file_inpu
  *		@off_t n_loop@  = number of byte from where the block starts
  *
  *
- * Returns:     ---
+ * Returns:     Zeor on success, @-1@ on error. 
  *
  * Use:         detect track of VCD/SVCD image.
  */
 int track_vcd_cue ( file_ptrs* fptrs, image_struct* img_struct, struct_cue* cue, off_t n_loop )
 {
 	int     n_return_value = ERROR;
-	static int file_number = 1;
 	
-	copy_sub_header		copy_header;
-
+	if ( track_vcd ( fptrs, img_struct, cue, n_loop ) == AOK ) 
+		n_return_value = AOK;
 	
-	switch ( img_struct->block ) {
-		case 2352:
-			n_loop +=16;
-		case 2336:
-			set_file_pointer ( fptrs -> fsource, ( n_loop ) );
-			
-			fread ( &copy_header, 1, sizeof ( copy_sub_header ), fptrs -> fsource );
-			/* new file number + real time mode = new track */	
-			if ( (  file_number  == ( *( copy_header.file ) ) )  && ( SUB_MODE_RT & ( *( copy_header.sub_mode ) ) ) ) {
-				file_number++;				
-				n_return_value = AOK;	
-			}
-		default:
-			break;
-			
-	}
-
 
 	return ( n_return_value );
 
@@ -335,40 +253,28 @@ int track_vcd_cue ( file_ptrs* fptrs, image_struct* img_struct, struct_cue* cue,
  *		@char *file_input@  = name of input file
  *
  *
- * Returns:     ---
+ * Returns:     Zeor on success, @-1@ on error.
  *
  * Use:         generate a cuesheet for vcd.
  */
 int create_vcd_cue ( file_ptrs* fptrs, image_struct* img_struct, char *file_input )
 {
 	off_t n_loop;
-	off_t img_size;
+	off_t n_img_size;
 	int number_block = 0;	
-
-	int block = 2352;
 
 	struct_cue 		cue;
 	msf_mode_block		msf_block;
 	
-	if ( ( img_size = get_file_size ( fptrs -> fsource ) ) < 1 ) return ( -1 ); /* The image file is empty */
-	
-	if ( img_struct -> block > 2352 ) 
-		block = 2352;
-		else  block = img_struct -> block;
-	
-	if ( ( fptrs->fdest ) ) {
-		
-		img_2_bin ( fptrs,  img_struct->block, block, img_struct->pregap );
-		
-	};
-
+	if ( ( n_img_size = get_file_size ( fptrs -> fsource ) ) < 1 ) return ( -1 ); /* The image file is empty */
 	
 	create_first_track  ( fptrs, img_struct, file_input, &cue );
 
 	n_loop = img_struct->pregap ;
 	
-	while ( n_loop <  img_size ) {
+	while ( n_loop <  n_img_size ) {
 
+       		progress_bar ( ( ( n_loop + 1 ) * 100 ) / n_img_size );
 		
 		if ( track_vcd_cue ( fptrs, img_struct, &cue, n_loop ) == AOK ) {
 			cue.track++;
@@ -389,6 +295,9 @@ int create_vcd_cue ( file_ptrs* fptrs, image_struct* img_struct, char *file_inpu
 	n_loop += img_struct->block;
 
 	}
+	
+	progress_bar ( 100 );
+
 	return ( 0 );
 }
 
@@ -399,35 +308,40 @@ int create_vcd_cue ( file_ptrs* fptrs, image_struct* img_struct, char *file_inpu
  *		@char *file_input@  = name of input file
  *		
  *
- * Returns:     ---
+ * Returns:     Zeor on success, @-1@ on error. 
  *
  * Use:         Get info from file for generate a cuesheet file descriptor.
  */
 int create_cue ( file_ptrs* fptrs, image_struct* img_struct, char *file_input )
 {
-	fprintf( fptrs->fdesc, "REM Generated with %s v%s\n", PACKAGE_NAME, VERSION );
+	int     n_return_value = AOK;
 
-	set_file_pointer ( fptrs -> fsource, ( img_struct -> pregap ) );
+	if ( img_struct -> block <= 2448 ) {
 
+		fprintf( fptrs->fdesc, "REM Generated with %s v%s\n", PACKAGE_NAME, VERSION );
 
-	switch (  img_struct->type  )	{
-		case IMG_AUDIO:
-			printf ("Need implementation\n");
-			break;
-		case IMG_ISO:
-			create_iso_cue ( fptrs, img_struct, file_input );
-			break;
-		case IMG_RAW:
-			create_raw_cue ( fptrs, img_struct, file_input );
-			break;
-		case IMG_VCD: case 9  : case 10 :
-			create_vcd_cue ( fptrs, img_struct, file_input );
-			break;
-		default :
-			printf ("Error\n");
-			break;
+		switch (  img_struct->type  )	{
+			case IMG_AUDIO:
+				printf ("Need implementation\n");
+				break;
+			case IMG_ISO:
+				create_iso_cue ( fptrs, img_struct, file_input );
+				break;
+			case IMG_RAW:
+				create_raw_cue ( fptrs, img_struct, file_input );
+				break;
+			case IMG_VCD: case 9  : case 10 :
+				create_vcd_cue ( fptrs, img_struct, file_input );
+				break;
+			default :
+				n_return_value = ERROR;
+				printf ("Error\n");
+				break;
+		}
 	}
-	return ( 0 );
+	else n_return_value = ERROR;
+
+	return ( n_return_value );
 }
 
 

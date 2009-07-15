@@ -77,12 +77,15 @@
 int main ( int argc, char* argv [ ] )
 {
 	iat_parser iat_option;
-	image_struct img_struct = {0};
+	image_struct img_struct = { 0 };
 	file_ptrs fptrs = { 0 };
 
-	char *file_input = malloc ( sizeof (char) * 100  ); /* need fix */
-	char *file_desc = malloc ( sizeof (char) * 100 );  /* need fix */
-	char *file_new = malloc ( sizeof (char) * 100 );
+	int block;
+	
+	char* file_input = NULL;	/* input image file */
+	char* file_desc = NULL;		/* output descriptor file */	
+	char* file_output = NULL;	/* output image file */
+
 	
 	if ( ( cmdline_parser ( argc, argv, &iat_option ) != 0 ) || ( argc <= 1 ) ) {
 		fprintf( stderr,"Run %s --help to see the list of options.\n", argv [ 0 ] ) ;
@@ -100,8 +103,12 @@ int main ( int argc, char* argv [ ] )
 	}
   
 	if ( iat_option.input_given ) {
-		if ( ( fptrs.fsource = fopen ( iat_option.input_arg, "rb" ) ) == NULL ) {
+		
+		file_input = copy_string ( iat_option.input_arg );
+	
+		if ( ( fptrs.fsource = fopen ( file_input, "rb" ) ) == NULL ) {
 			fprintf ( stderr, "%s: %s\n", iat_option.input_arg, strerror ( errno ) ) ;
+			free_allocated_memory ( ( void* ) file_input );
 			exit ( 1 );
 		}	
 	} else {
@@ -110,53 +117,145 @@ int main ( int argc, char* argv [ ] )
 	}
 
 	if ( iat_option.debug_given ) {
+		printf ( "Get info from %s :\n", iat_option.input_arg );		
+		
 		calculate_pregap ( &fptrs, &img_struct );
 		debug ( &fptrs, &img_struct );
+		free_allocated_memory ( ( void* ) file_input ); 
 		exit ( 0 ) ;
 	}
 	
 	if ( iat_option.toc_given ) {
 	
-		printf ("Need implementation\n");	
-/*		calculate_pregap ( &fptrs, &img_struct );
-		if ( ( img_struct.pregap > 0 ) || ( img_struct.block >= 2448 ) ) {
-			printf ("Need implementation\n");
+		printf ( "Get info from %s :\n", iat_option.input_arg );		
+		
+		calculate_pregap ( &fptrs, &img_struct );
+		
+		if ( img_struct.pregap > 0  ) {	
+		
+			printf ( "Image conversion :\n\t%s => ", file_input ); 
+			
+			if ( iat_option.output_given ) {
+				file_output = copy_string ( iat_option.output_arg );
+				file_output = smart_name ( file_output, "dat" );
+			}
+			else 	file_output = smart_name ( file_input, "dat" );
+
+				
+			if ( ( fptrs.fdest = fopen ( file_output, "wb" ) ) == NULL ) {
+				fprintf ( stderr, "%s: %s\n", file_desc, strerror ( errno ) ) ;
+				exit ( 1 );
+			}
+
+			printf( "%s\n", file_output );	
+
+			
+			/* Convert your image for work with cue sheet file */
+			if ( ! ( img_2_bin ( &fptrs,  img_struct.block, img_struct.block, img_struct.pregap ) ) )
+				{
+					printf ("ERROR\n");
+					exit ( 0 );
+				}
+
+			if ( fptrs.fsource ) fclose ( fptrs.fsource );
+			if ( fptrs.fdest ) fclose ( fptrs.fdest );				
+			
+			if ( ( fptrs.fsource = fopen ( file_output, "rb" ) ) == NULL ) {
+				fprintf ( stderr, "%s: %s\n", file_input, strerror ( errno ) ) ;
+				exit ( 1 ); 
+			}
+			
+			file_input = copy_string ( file_output );
+
+
+			
 		}
-	
+
+		/* Take name from original file for create name for toc */
+		
+		if ( iat_option.output_given ) {
+			file_desc = copy_string ( iat_option.output_arg );
+			file_desc = smart_name ( file_desc, "toc" );
+		}
+		else file_desc = smart_name ( file_input, "toc" );
+		
+		printf ("Create %s from %s\n", file_desc, file_input);
+
+		/* Create toc file */
+		if ( ( fptrs.fdesc = fopen ( file_desc, "wb" ) ) == NULL ) {
+			fprintf ( stderr, "%s: %s\n", file_desc, strerror ( errno ) ) ;
+			exit ( 1 );
+		}	
+		
 		create_toc ( &fptrs, &img_struct, file_input );
 
-		free ( file_desc );	
-*/
+		free_allocated_memory ( ( void* ) file_input ); 
+		free_allocated_memory ( ( void* ) file_desc ); 
+
 		exit ( 0 );
 				
 	}	
 
 	if ( iat_option.cue_given ) {
-		
+	
+		printf ( "Get info from %s :\n", iat_option.input_arg );		
+	
 		calculate_pregap ( &fptrs, &img_struct );
-
-		file_input = iat_option.input_arg;
-
-
 
 		if ( ( img_struct.pregap > 0 ) || ( img_struct.block >= 2448 ) ) {
 			
-			printf ( "Image conversion :\n\t%s => ", file_input );
+			printf ( "Image conversion :\n\t%s => ", file_input ); 
+			
+			if ( iat_option.output_given ) {
+				file_output = copy_string ( iat_option.output_arg );
+				file_output = smart_name ( file_output, "bin" );
+			}
+			else 	file_output = smart_name ( file_input, "bin" );
 
-			smart_name ( file_input, file_input, ".bin" );
-			if ( ( fptrs.fdest = fopen ( file_input, "wb" ) ) == NULL ) {
+			
+			if ( ( fptrs.fdest = fopen ( file_output, "wb" ) ) == NULL ) {
 				fprintf ( stderr, "%s: %s\n", file_desc, strerror ( errno ) ) ;
 				exit ( 1 );
 			}
 
-			printf("%s \n", file_input);	
-	
+			printf( "%s", file_output );	
+
+			if ( img_struct.block == 2448 ) {
+				printf ( "\n\tWarning: Your image change from 2448 to 2352");
+				block = 2352;
+			}
+			else block = img_struct.block;
+			
+			printf ("\n");
+			
+			/* Convert your image for work with cue sheet file */
+			if ( ! ( img_2_bin ( &fptrs,  img_struct.block, block, img_struct.pregap ) ) )
+				{
+					printf ("ERROR\n");
+					exit ( 0 );
+				}
+
+			if ( fptrs.fsource ) fclose ( fptrs.fsource );
+			if ( fptrs.fdest ) fclose ( fptrs.fdest );				
+			
+			if ( ( fptrs.fsource = fopen ( file_output, "rb" ) ) == NULL ) {
+				fprintf ( stderr, "%s: %s\n", file_input, strerror ( errno ) ) ;
+				exit ( 1 ); 
+			}
+			
+			file_input = copy_string ( file_output );
+				
 		}				
 			
-
 		/* Take name from original file for create name for cue */
-		smart_name ( file_desc, file_input, ".cue" );
 		
+		if ( iat_option.output_given ) {
+			file_desc = copy_string ( iat_option.output_arg );
+			file_desc = smart_name ( file_desc, "cue" );
+		}
+		else file_desc = smart_name ( file_input, "cue" );
+		
+		printf ("Create %s from %s\n", file_desc, file_input);
 
 		/* Create cue file */
 		if ( ( fptrs.fdesc = fopen ( file_desc, "wb" ) ) == NULL ) {
@@ -165,18 +264,16 @@ int main ( int argc, char* argv [ ] )
 		}	
 
 		create_cue ( &fptrs, &img_struct, file_input ) ;
-	
+
 		if ( fptrs.fdesc ) fclose ( fptrs.fdesc );	
-		if ( fptrs.fdest ) fclose ( fptrs.fdest );
+		if ( fptrs.fsource ) fclose ( fptrs.fsource );
 
-
-		
-		/*free ( file_desc ); */
-		/*free ( file_input ); */
+		free_allocated_memory ( ( void* ) file_input ); 
+		free_allocated_memory ( ( void* ) file_desc ); 
 
 		exit ( 0 );
 	}	
- 
+/* 
 	if ( iat_option.output_given ) {
 		if ( ( fptrs.fdest = fopen ( iat_option.output_arg, "wb" ) ) == NULL ) {
        			fprintf ( stderr, "%s: %s\n", iat_option.output_arg, strerror ( errno ) ) ;
@@ -186,10 +283,23 @@ int main ( int argc, char* argv [ ] )
                 fprintf ( stderr, "Run %s --help to see the list of options.\n", argv [ 0 ] );
                 exit ( 1 );
         }
-
+*/
 	if ( iat_option.iso_given ) {
+
+		if ( iat_option.output_given ) {
+			file_output = copy_string ( iat_option.output_arg );
+		}
+		else file_output =  smart_name ( file_input, "iso" );
+
 		
+		if ( ( fptrs.fdest = fopen ( file_output, "wb" ) ) == NULL ) {
+			fprintf ( stderr, "%s: %s\n", file_output, strerror ( errno ) ) ;
+                        exit ( 1 );
+		}
+
 		calculate_pregap ( &fptrs, &img_struct );
+
+		printf ("Create %s from %s\n", file_output, file_input);
 
 		if ( ( img_struct . pregap == 0 ) &&  ( ( img_struct . type == IMG_ISO ) || ( img_struct . type == IMG_VCD ) ) ) {
 		
@@ -234,11 +344,11 @@ int main ( int argc, char* argv [ ] )
 	if ( fptrs.fsource ) fclose ( fptrs.fsource );
 	if ( fptrs.fdest ) fclose ( fptrs.fdest );
 
-	
+/*	
 	free ( file_desc ); 
 	free ( file_input );
 
-
+*/
 	
 	return ( 0 );
 }

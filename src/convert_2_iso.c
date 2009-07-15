@@ -299,8 +299,8 @@ long mode_2_form_2_headerless ( file_ptrs* fptrs, long n_fptr_pos )
  */
 int bin_2_iso ( file_ptrs* fptrs,  image_struct*  img_struct )
 {
-	long	n_loop = 0;
-	long	n_img_size = 0;
+	off_t	n_loop = 0;
+	off_t	n_img_size = 0;
 	int	n_return_value = ERROR;
 	int	n_mode = 0;
 
@@ -381,8 +381,8 @@ int bin_2_iso ( file_ptrs* fptrs,  image_struct*  img_struct )
 
 int img_2_iso ( file_ptrs* fptrs,  image_struct*  img_struct )
 {
-        long    	n_loop = 0;
-        long    	n_img_size = 0;
+        off_t    	n_loop = 0;
+        off_t    	n_img_size = 0;
 	unsigned char*	data_buffer = 0;
         int     	n_return_value = ERROR;
 

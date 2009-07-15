@@ -146,6 +146,9 @@ off_t calculate_pregap ( file_ptrs* fptrs,  image_struct*  img_struct )
 	{
 		set_file_pointer ( fptrs -> fsource, n_loop );
 		fread ( buf, sizeof ( char ), 12, fptrs -> fsource );
+
+       		progress_bar ( ( ( n_loop + 1 ) * 100 ) / img_size );
+		
 	
 		if ( !memcmp ( HEADER_ID, buf, 12 ) ) {
 			if ( ( img_struct -> type == 0 ) || ( img_struct -> type == 2 ) ) {
@@ -172,22 +175,17 @@ off_t calculate_pregap ( file_ptrs* fptrs,  image_struct*  img_struct )
 					cd_id_end = n_loop;
 					n_loop = img_size;
 				}
-			
-			/*if ( !memcmp ( ISO_9660_START, buf, 8 ) ) {
-			cd_id_start = n_loop;
-			n_loop += 1023;
-			img_struct -> type += 2;
-		} else if ( !memcmp ( ISO_9660_END, buf, 8 ) ) {
-			cd_id_end = n_loop;
-			n_loop = img_size;
-		*/
 		
 		} else if ( !memcmp ( XA_ID, buf, 8 ) ) { 
 			if ( img_struct -> type <= 7 )
 				img_struct -> type += 7;
 		}
 	}
-		
+	
+	progress_bar ( 100 );
+	
+	printf ("\n");
+	
 	/* Detect Block of image */	
 	img_struct -> block  = calculate_block_size ( cd_id_start, cd_id_end, img_struct );
 	

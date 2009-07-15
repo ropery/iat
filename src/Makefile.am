@@ -5,7 +5,9 @@ iat_SOURCES =   util.c \
 		debug.c \
       		cmdline.c \
 		mkcue.c \
-   		main.c 
+		mktoc.c \
+		mkcore.c \
+		main.c 
 include_HEADERS = util.h \
 		calculate_pregap.h \
 		convert_2_iso.h \
@@ -14,7 +16,9 @@ include_HEADERS = util.h \
 		mmc2r11.h \
 		debug.h \
 		ecma119.h \
-		mkcue.h 	
+		mkcue.h \
+		mktoc.h	\
+		mkcore.h
 
 AM_CFLAGS = -D_FILE_OFFSET_BITS=64 -pedantic -Wconversion -Wpointer-arith -Wcast-align #-std=c99 
 

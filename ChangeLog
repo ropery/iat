@@ -2,6 +2,7 @@ v0.2.git xx/xx/2009
 
 	Added support UDF
 	Added support export CUE
+	Added support export TOC
 	Improvement speed of image detection
 	Improvement debug mode
 	Added support SVCD/VCD
