@@ -298,6 +298,8 @@ int create_vcd_cue ( file_ptrs* fptrs, image_struct* img_struct, char *file_inpu
 	
 	progress_bar ( 100 );
 
+	printf ( "\n" );
+
 	return ( 0 );
 }
 
