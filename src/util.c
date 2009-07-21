@@ -1,12 +1,12 @@
 /**
- * Copyright (C) 2009 
+ * Copyright (C) 2009
  *	- Salvatore Santagati <salvatore.santagati@gmail.com>
  * 	- Abdur Rab <c.abdur@yahoo.com>
  *
  * All rights reserved.
  *
- * This program is free software; under the terms of the 
- * GNU General Public License as published by the Free Software Foundation; 
+ * This program is free software; under the terms of the
+ * GNU General Public License as published by the Free Software Foundation;
  * either version 2 of the License, or (at your option) any later version.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,12 +14,12 @@
  * met:
  *
  * @ Redistributions of source code must retain the above copyright
- *   notice, this list of conditions and the following disclaimer. 
+ *   notice, this list of conditions and the following disclaimer.
  *
  * @ Redistributions in binary form must reproduce the above copyright
  *   notice, this list of conditions and the following disclaimer in
  *   the documentation and/or other materials provided with the
- *   distribution. 
+ *   distribution.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -59,19 +59,19 @@ void free_allocated_memory ( void* pointer_to_free )
 
 /* ---@copy_string@ ---*
 *
-* Arguments:	@char* cp_string@ = pointer to string to be copied
+* Arguments:	@const char* cp_string@ = pointer to string to be copied
 *
 * Returns:	The copied string if successful, @NULL@ otherwise.
 *
 * Use:		Copies the string to the newly allocated space.
 *
 */
-unsigned char* copy_string ( char* cp_string )
+char* copy_string ( const char* cp_string )
 {
-	unsigned char* return_value = NULL;
-	int length = 0;
+	char* return_value = NULL;
+	size_t length = 0;
 	length = ( strlen ( cp_string ) + 1 );
-	return_value = ( unsigned char* ) malloc ( sizeof ( unsigned char ) * length );
+	return_value = ( char* ) malloc ( sizeof ( char ) * length );
 	if ( return_value ) {
 		memset ( return_value, 0, length );
 		memmove ( return_value, cp_string, ( length - 1 ) );
@@ -81,23 +81,22 @@ unsigned char* copy_string ( char* cp_string )
 
 /* ---@smart_name@ ---*
 *
-* Arguments:	@char *new@ = pointer to new name
-*		@char *original@ = pointer to original base name
-*		@char *ext@ = pointer a new extention
+* Arguments:	@const char *original@ = pointer to original base name
+*		@const char *ext@ = pointer a new extention
 *
-* Use:		Create name for file
+* Returns:	The copied string if successful, @NULL@ otherwise.
+*
+* Use:		Creates smart name for file
 *
 */
-
-
-char* smart_name ( const char* original, char* ext )
+char* smart_name ( const char* original, const char* ext )
 {
-	unsigned char* buffer = NULL;
+	char* buffer = NULL;
 	char* tmp_buffer = NULL;
-	int length = 0;
-	int file_ext_lenght = 0;
+	size_t length = 0;
+	size_t file_ext_lenght = 0;
 
-	if ( ( NULL == original ) || ( NULL == ext ) )return ( NULL );
+	if ( ( NULL == original ) || ( NULL == ext ) ) return ( NULL );
 
 	if ( NULL != ( tmp_buffer = strrchr ( original, '.' ) ) ) {
 		if ( !memcmp ( ( tmp_buffer + 1 ), ext, strlen ( ext ) ) ) {
@@ -105,7 +104,7 @@ char* smart_name ( const char* original, char* ext )
 			file_ext_lenght += strlen ( ext ); /* to include the extension */
 			file_ext_lenght += 4; /* for including '_0.' and 'null' char */
 
-			buffer = ( unsigned char* ) malloc ( sizeof ( unsigned char ) * ( length + file_ext_lenght ) );
+			buffer = ( char* ) malloc ( sizeof ( char ) * ( length + file_ext_lenght ) );
 			if ( buffer ) {
 				memset ( buffer, 0, ( length + file_ext_lenght ) );
 				memmove ( buffer, original, length );
@@ -117,7 +116,7 @@ char* smart_name ( const char* original, char* ext )
 			file_ext_lenght += strlen ( ext ); /* to include the extension */
 			file_ext_lenght += 2; /* for including '.' and 'null' char */
 
-			buffer = ( unsigned char* ) malloc ( sizeof ( unsigned char ) * ( length + file_ext_lenght ) );
+			buffer = ( char* ) malloc ( sizeof ( char ) * ( length + file_ext_lenght ) );
 			if ( buffer ) {
 				memset ( buffer, 0, ( length + file_ext_lenght ) );
 				memmove ( buffer, original, length );
@@ -130,7 +129,7 @@ char* smart_name ( const char* original, char* ext )
 		file_ext_lenght += 2; /* for including '.' and 'null' char */
 		length = strlen ( original );
 
-		buffer = ( unsigned char* ) malloc ( sizeof ( unsigned char ) * ( length + file_ext_lenght ) );
+		buffer = ( char* ) malloc ( sizeof ( char ) * ( length + file_ext_lenght ) );
 		if ( buffer ) {
 			memset ( buffer, 0, ( length + file_ext_lenght ) );
 			memmove ( buffer, original, length );
@@ -147,18 +146,18 @@ char* smart_name ( const char* original, char* ext )
 unsigned char* smart_name ( char* cp_string, char* ext_string )
 {
 	unsigned char* return_value = NULL;
-	
+
 	return_value = strtok ( cp_string , "." );
 
 	strncat( return_value, ext_string , ( strlen ( ext_string ) ) );
 	printf ( "smart name (%s)\n", return_value );
-	return ( return_value );		
+	return ( return_value );
 }
 */
 /* --- @lba2msf@ --- *
  *
  * Arguments:   @off_t lba@ = logical block addres size
- *              @msf_mode_block *msf_block@ = pointer struct of BCD 
+ *              @msf_mode_block *msf_block@ = pointer struct of BCD
  *
  *
  * Use:         Reads LBA and translate msf.
@@ -181,8 +180,8 @@ void lba2msf ( off_t lba, msf_mode_block* msf_block )
 off_t  get_file_size ( FILE* fptr )
 {
 	if ( NULL == fptr ) return ( -1 );
-	fseeko ( fptr, 0L, SEEK_END );
-	return ( ftello ( fptr ) );	
+	fseeko ( fptr, ( off_t ) 0, SEEK_END );
+	return ( ftello ( fptr ) );
 }
 
 /* --- @set_file_pointer@ --- *
@@ -197,7 +196,7 @@ off_t  get_file_size ( FILE* fptr )
 off_t  set_file_pointer ( FILE* fptr, off_t n_pos )
 {
 	if ( get_file_size ( fptr ) < n_pos ) return ( -1 );
-	fseeko ( fptr, 0L, SEEK_SET );
+	fseeko ( fptr, ( off_t ) 0, SEEK_SET );
 	fseeko ( fptr, n_pos, SEEK_CUR );
 	return ( n_pos );
 }
@@ -213,11 +212,11 @@ off_t  set_file_pointer ( FILE* fptr, off_t n_pos )
 int is_svcd_sub_header ( unsigned char* header )
 {
 	/* SVCD SUB HEADER for BLOCK 2336 */
-	unsigned const char svcd_header [ 4 ] [ 8 ] = { 
-		{ 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x08, 0x00 }, 
-		{ 0x00, 0x00, 0x09, 0x00, 0x00, 0x00, 0x09, 0x00 }, 
-		{ 0x00, 0x00, 0x88, 0x00, 0x00, 0x00, 0x88, 0x00 }, 
-		{ 0x00, 0x00, 0x89, 0x00, 0x00, 0x00, 0x89, 0x00 }		
+	unsigned const char svcd_header [ 4 ] [ 8 ] = {
+		{ 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x08, 0x00 },
+		{ 0x00, 0x00, 0x09, 0x00, 0x00, 0x00, 0x09, 0x00 },
+		{ 0x00, 0x00, 0x88, 0x00, 0x00, 0x00, 0x88, 0x00 },
+		{ 0x00, 0x00, 0x89, 0x00, 0x00, 0x00, 0x89, 0x00 }
 	};
 
 	int n_count = 0;
@@ -242,32 +241,34 @@ int is_svcd_sub_header ( unsigned char* header )
  *
  * Returns:	mode of image, @-1@ otherwise
  *
- * Use:		convert image to image. 
+ * Use:		convert image to image.
  */
 int img_2_img ( file_ptrs* fptrs,  int block_old, int block_new, off_t pregap )
 {
-        int	n_return_value = ERROR;
-	char	*fimg =  malloc ( sizeof (char) * block_old); 
+        int	return_value = ERROR;
+	char*	fimg =  NULL;
 	off_t	n_loop;
-	off_t	n_img_size;				
+	off_t	n_img_size;
 
-	if ( ( n_img_size = get_file_size ( fptrs -> fsource ) ) < 1 ) return ( n_return_value ); /* The image file is empty */
+	if ( ( n_img_size = get_file_size ( fptrs -> fsource ) ) < 1 ) return ( return_value ); /* The image file is empty */
+	if ( NULL == ( fimg = malloc ( sizeof ( char ) * block_old ) ) ) return ( return_value ); /* Could not allocate memory */
 
 	set_file_pointer ( fptrs -> fsource, pregap );
 
-	for ( n_loop = pregap  ; n_loop <  n_img_size ; n_loop += block_old ) 
-	{
-       		progress_bar ( ( ( n_loop + 1 ) * 100 ) / n_img_size );
-		fread  ( fimg , 1, block_old, fptrs -> fsource );	
-		fwrite ( fimg, 1, block_new, fptrs -> fdest );
-		n_return_value = AOK;
+	for ( n_loop = pregap  ; n_loop <  n_img_size ; n_loop += block_old ) {
+		progress_bar ( ( ( n_loop + 1 ) * 100 ) / n_img_size );
+		memset ( fimg, 0, ( unsigned int ) block_old );
+		fread  ( fimg , 1, ( unsigned int ) block_old, fptrs -> fsource );
+		fwrite ( fimg, 1, ( unsigned int ) block_new, fptrs -> fdest );
+		return_value = AOK;
 	}
 
-	free ( fimg );	
+	set_file_pointer ( fptrs -> fsource, ( off_t ) 0 );
+	free_allocated_memory ( ( void* ) fimg );
 
 	progress_bar ( 100 );
-	printf ( "\n" );
+	printf ( "\n\n" );
 
-	return ( n_return_value );
+	return ( return_value );
 }
 
