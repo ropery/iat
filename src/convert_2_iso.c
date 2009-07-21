@@ -363,8 +363,12 @@ int bin_2_iso ( file_ptrs* fptrs,  image_struct*  img_struct )
 		}
 	}
 
+	set_file_pointer ( fptrs -> fsource, ( off_t ) 0 );
+
 	n_return_value = AOK;
 	progress_bar ( 100 );
+
+	printf ( "\n" );
 
 	return ( n_return_value );
 }
@@ -403,8 +407,12 @@ int img_2_iso ( file_ptrs* fptrs,  image_struct*  img_struct )
 		free ( data_buffer );
 	}
 
+	set_file_pointer ( fptrs -> fsource, ( off_t ) 0 );
+
 	n_return_value = AOK;
 	progress_bar ( 100 );
+
+	printf ( "\n" );
 	
 	return ( n_return_value );
 }
