@@ -46,7 +46,7 @@
 int is_udf_image  ( unsigned char* header )
 {
         int number = 7;
-        int size = 5;
+        size_t size = 5;
         /* UDF HEADER */
         unsigned const char udf_header [ 7 ] [ 5 ] = {
                 { 0x42, 0x45, 0x41, 0x30, 0x31 }, /* BEA01 */
@@ -181,7 +181,8 @@ off_t calculate_pregap ( file_ptrs* fptrs,  image_struct*  img_struct )
 				img_struct -> type += 7;
 		}
 	}
-	
+
+	set_file_pointer ( fptrs -> fsource, ( off_t ) 0 );
 	progress_bar ( 100 );
 	
 	printf ("\n");
