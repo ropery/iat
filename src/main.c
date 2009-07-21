@@ -1,12 +1,12 @@
 /**
- * Copyright (C) 2009 
+ * Copyright (C) 2009
  *	- Salvatore Santagati <salvatore.santagati@gmail.com>
  * 	- Abdur Rab <c.abdur@yahoo.com>
  *
  * All rights reserved.
  *
- * This program is free software; under the terms of the 
- * GNU General Public License as published by the Free Software Foundation; 
+ * This program is free software; under the terms of the
+ * GNU General Public License as published by the Free Software Foundation;
  * either version 2 of the License, or (at your option) any later version.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,12 +14,12 @@
  * met:
  *
  * @ Redistributions of source code must retain the above copyright
- *   notice, this list of conditions and the following disclaimer. 
+ *   notice, this list of conditions and the following disclaimer.
  *
  * @ Redistributions in binary form must reproduce the above copyright
  *   notice, this list of conditions and the following disclaimer in
  *   the documentation and/or other materials provided with the
- *   distribution. 
+ *   distribution.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -74,281 +74,312 @@
 #include "mkcue.h"
 #endif
 
+#define DAT_FORMAT	0
+#define BIN_FORMAT	1
+
+#define TOC_FORMAT	0
+#define CUE_FORMAT	1
+
+#define HLP_MODE	0
+#define DBG_MODE	1
+#define TOC_MODE	2
+#define CUE_MODE	3
+#define ISO_MODE	4
+
+
+/* ---@create_toc_or_cue@ ---*
+*
+* Arguments:	@iat_parser* iat_option@ = options from the command line
+* 		@image_struct* img_struct@ = the information about the image
+* 		@file_ptrs* fptrs@ = the input and the destination file pointers
+* 		@int is_bin@ = 1 if it is bin, 0 if dat
+*
+* Returns:	@AOK@ if successful, @ERROR@ otherwise.
+*
+* Use:		Creates toc (or) cue from the cd image.
+*
+*/
+int create_toc_or_cue ( iat_parser* iat_option, image_struct* img_struct, file_ptrs* fptrs, int is_cue )
+{
+	int return_value = ERROR;
+	char* file_desc = NULL;
+	char ext [ 2 ] [ 4 ] = { 0 };
+
+	if ( ( NULL == iat_option ) || ( NULL == img_struct ) || ( NULL == fptrs ) ) return ( return_value );
+	memset ( ext [ 0 ] , 0, 4 ); memmove ( ext [ 0 ] , "toc", 3 );
+	memset ( ext [ 1 ] , 0, 4 ); memmove ( ext [ 1 ] , "cue", 3 );
+
+	if ( iat_option -> output_given ) file_desc = smart_name ( iat_option -> output_arg, ext [ is_cue ] );
+	else file_desc = smart_name ( iat_option -> input_arg, ext [ is_cue ] );
+
+	printf ( "Create %s from %s\n", file_desc, iat_option -> input_arg );
+
+	if ( ( fptrs -> fdesc = fopen ( file_desc, "wb" ) ) == NULL ) {
+		fprintf ( stderr, "%s: %s\n", file_desc, strerror ( errno ) );
+		free_allocated_memory ( ( void* ) file_desc );
+		return ( return_value );
+	}
+
+	switch ( is_cue ) {
+		case TOC_FORMAT :
+			create_toc ( fptrs, img_struct, iat_option -> input_arg );
+			break;
+		case CUE_FORMAT :
+			create_cue ( fptrs, img_struct, iat_option -> input_arg );
+			break;
+		default :
+			break;
+	}
+
+	fclose ( fptrs -> fdesc );
+	free_allocated_memory ( ( void* ) file_desc );
+
+	return ( return_value );
+}
+
+/* ---@create_dat_or_bin@ ---*
+*
+* Arguments:	@iat_parser* iat_option@ = options from the command line
+* 		@image_struct* img_struct@ = the information about the image
+* 		@file_ptrs* fptrs@ = the input and the destination file pointers
+* 		@int is_bin@ = 1 if it is bin, 0 if dat
+*
+* Returns:	@AOK@ if successful, @ERROR@ otherwise.
+*
+* Use:		Creates bin (or) dat from the cd image.
+*
+*/
+int create_dat_or_bin ( iat_parser* iat_option, image_struct* img_struct, file_ptrs* fptrs, int is_bin )
+{
+	int return_value = ERROR;
+	char* file_output = NULL;
+	char ext [ 2 ] [ 4 ] = { 0 };
+	int block = 0;
+
+	if ( ( NULL == iat_option ) || ( NULL == img_struct ) || ( NULL == fptrs ) ) return ( return_value );
+
+	memset ( ext [ 0 ] , 0, 4 ); memmove ( ext [ 0 ] , "dat", 3 );
+	memset ( ext [ 1 ] , 0, 4 ); memmove ( ext [ 1 ] , "bin", 3 );
+
+	printf ( "Image conversion :\n\t%s => ", iat_option -> input_arg );
+
+	if ( iat_option -> output_given ) file_output = smart_name ( iat_option -> output_arg, ext [ is_bin ] );
+	else file_output = smart_name ( iat_option -> input_arg, ext [ is_bin ] );
+
+	if ( NULL == ( fptrs -> fdest = fopen ( file_output, "wb" ) ) ) {
+		fprintf ( stderr, "%s: %s\n", file_output, strerror ( errno ) );
+		free_allocated_memory ( ( void* ) file_output );
+		return ( return_value );
+	}
+
+	printf( "%s\n", file_output );
+
+	switch ( is_bin ) {
+		case DAT_FORMAT :
+			block = img_struct -> block;
+			break;
+		case BIN_FORMAT :
+			block = ( 2448 == img_struct -> block ) ? 2352 : img_struct -> block;
+			break;
+		default :
+			block = 0;
+			break;
+	}
+
+	/* Convert your image to dat or bin */
+	if ( ! ( img_2_bin ( fptrs,  ( int ) img_struct -> block, block, ( off_t ) img_struct -> pregap ) ) ) {
+		printf ("\nERROR");
+		free_allocated_memory ( ( void* ) file_output );
+		return ( return_value );
+	}
+	else return_value = AOK;
+
+	fclose ( fptrs -> fdest );
+	free_allocated_memory ( ( void* ) file_output );
+
+	return ( return_value );
+}
+
+/* ---@iso_conversion@ ---*
+*
+* Arguments:	@iat_parser* iat_option@ = options from the command line
+* 		@image_struct* img_struct@ = the information about the image
+* 		@file_ptrs* fptrs@ = the input and the destination file pointers
+*
+* Returns:	@AOK@ if successful, @ERROR@ otherwise.
+*
+* Use:		Converts the cd image to Iso9660 image.
+*
+*/
+int iso_conversion ( iat_parser* iat_option, image_struct* img_struct, file_ptrs* fptrs )
+{
+	int return_value = ERROR;
+	char* file_output = NULL;
+
+	if ( ( NULL == iat_option ) || ( NULL == img_struct ) || ( NULL == fptrs ) ) return ( return_value );
+
+	if ( iat_option -> output_given ) file_output = copy_string ( iat_option -> output_arg );
+	else file_output =  smart_name ( iat_option -> input_arg, "iso" );
+
+	if ( NULL == ( fptrs -> fdest = fopen ( file_output, "wb" ) ) ) {
+		fprintf ( stderr, "%s: %s\n", file_output, strerror ( errno ) );
+		free_allocated_memory ( ( void* ) file_output );
+                return ( return_value );
+	}
+
+	printf ( "Create %s from %s\n", file_output, iat_option -> input_arg );
+
+	if ( ( img_struct -> pregap == 0 ) &&  ( ( img_struct -> type == IMG_ISO ) || ( img_struct -> type == IMG_VCD ) ) ) {
+		switch ( img_struct -> type ) {
+
+			case IMG_ISO :
+				printf ( "Warning : ISO iso9660 Image found, convertion not required \n" );
+				break;
+
+			case IMG_VCD :
+				printf ( "Warning : SVCD ISO iso9660 Image found, convertion not required \n" );
+				break;
+
+			default:
+				break;
+		}
+	} else {
+
+		switch ( img_struct -> type ) {
+
+			case IMG_ISO :
+				img_2_iso ( fptrs, img_struct );
+				return_value = AOK;
+				break;
+
+			case IMG_RAW :
+				bin_2_iso ( fptrs, img_struct );
+				return_value = AOK;
+				break;
+
+			case IMG_VCD :  case 9  : case 10 :
+				printf ( "Warning : VCD Image conversion, may not work in your standalone player \n" );
+				bin_2_iso ( fptrs, img_struct );
+				return_value = AOK;
+				break;
+
+			default :
+				printf ( "No DATA found\n" );
+				break;
+		}
+	}
+
+	fclose ( fptrs -> fdest );
+	free_allocated_memory ( ( void* ) file_output );
+
+	return ( return_value );
+}
+
+/* ---@choose_conversion@ ---*
+*
+* Arguments:	@iat_parser* iat_option@ = options from the command line
+*
+* Returns:	@{HLP_MODE, DBG_MODE, TOC_MODE, CUE_MODE, ISO_MODE}@.
+*
+* Use:		Chooses the conversion methods.
+*
+*/
+int choose_conversion ( iat_parser* iat_option )
+{
+	int return_value = HLP_MODE;
+
+	if ( iat_option -> debug_given ) { return_value = DBG_MODE; }
+	else if ( iat_option -> toc_given ) { return_value = TOC_MODE; }
+	else if ( iat_option -> cue_given ) { return_value = CUE_MODE; }
+	else if ( iat_option -> iso_given ) { return_value = ISO_MODE; }
+
+	return ( return_value );
+}
+
 int main ( int argc, char* argv [ ] )
 {
 	iat_parser iat_option;
 	image_struct img_struct = { 0 };
 	file_ptrs fptrs = { 0 };
 
-	int block;
-	
 	char* file_input = NULL;	/* input image file */
-	char* file_desc = NULL;		/* output descriptor file */	
-	char* file_output = NULL;	/* output image file */
 
-	
+	int return_value = ERROR;
+	int n_value = AOK;
+
 	if ( ( cmdline_parser ( argc, argv, &iat_option ) != 0 ) || ( argc <= 1 ) ) {
-		fprintf( stderr,"Run %s --help to see the list of options.\n", argv [ 0 ] ) ;
-		exit ( 1 ) ;
-	} 
-	
+		fprintf( stderr,"Run %s --help to see the list of options.\n", argv [ 0 ] );
+		exit ( ERROR );
+	}
+
 	if ( iat_option.help_given ) {
 		cmdline_parser_print_help();
-		exit ( 0 );
+		exit ( AOK );
 	}
-	
+
 	if ( iat_option.version_given ) {
 		printf ( "%s v%s\n", PACKAGE_NAME, VERSION );
-		exit ( 0 );
+		exit ( AOK );
 	}
-  
+
 	if ( iat_option.input_given ) {
-		
 		file_input = copy_string ( iat_option.input_arg );
-	
 		if ( ( fptrs.fsource = fopen ( file_input, "rb" ) ) == NULL ) {
-			fprintf ( stderr, "%s: %s\n", iat_option.input_arg, strerror ( errno ) ) ;
+			fprintf ( stderr, "%s: %s\n", iat_option.input_arg, strerror ( errno ) );
 			free_allocated_memory ( ( void* ) file_input );
-			exit ( 1 );
-		}	
+			exit ( ERROR );
+		}
+
+		/* If the input is provided, calculate the pregap info */
+		printf ( "Get info from %s\n", file_input );
+		calculate_pregap ( &fptrs, &img_struct );
 	} else {
 		fprintf ( stderr, "Run %s --help to see the list of options.\n", argv [ 0 ] );
-		exit ( 1 );
+		exit ( ERROR );
 	}
 
-	if ( iat_option.debug_given ) {
-		printf ( "Get info from %s :\n", iat_option.input_arg );		
-		
-		calculate_pregap ( &fptrs, &img_struct );
-		debug ( &fptrs, &img_struct );
-		free_allocated_memory ( ( void* ) file_input ); 
-		exit ( 0 ) ;
-	}
-	
-	if ( iat_option.toc_given ) {
-	
-		printf ( "Get info from %s :\n", iat_option.input_arg );		
-		
-		calculate_pregap ( &fptrs, &img_struct );
-		
-		if ( img_struct.pregap > 0  ) {	
-		
-			printf ( "Image conversion :\n\t%s => ", file_input ); 
-			
-			if ( iat_option.output_given ) {
-				file_output = copy_string ( iat_option.output_arg );
-				file_output = smart_name ( file_output, "dat" );
-			}
-			else 	file_output = smart_name ( file_input, "dat" );
-
-				
-			if ( ( fptrs.fdest = fopen ( file_output, "wb" ) ) == NULL ) {
-				fprintf ( stderr, "%s: %s\n", file_desc, strerror ( errno ) ) ;
-				exit ( 1 );
-			}
-
-			printf( "%s\n", file_output );	
-
-			
-			/* Convert your image for work with cue sheet file */
-			if ( ! ( img_2_bin ( &fptrs,  img_struct.block, img_struct.block, img_struct.pregap ) ) )
-				{
-					printf ("ERROR\n");
-					exit ( 0 );
+	switch ( choose_conversion ( &iat_option ) ) {
+		case HLP_MODE :
+				cmdline_parser_print_help();
+				return_value = AOK;
+				break;
+		case DBG_MODE :
+				debug ( &fptrs, &img_struct );
+				return_value = AOK;
+				break;
+		case TOC_MODE :
+				if ( img_struct.pregap > 0  ) {
+					n_value = ( ERROR == create_dat_or_bin ( &iat_option, &img_struct, &fptrs, DAT_FORMAT ) ) ? ERROR : AOK;
+					return_value = n_value;
 				}
 
-			if ( fptrs.fsource ) fclose ( fptrs.fsource );
-			if ( fptrs.fdest ) fclose ( fptrs.fdest );				
-			
-			if ( ( fptrs.fsource = fopen ( file_output, "rb" ) ) == NULL ) {
-				fprintf ( stderr, "%s: %s\n", file_input, strerror ( errno ) ) ;
-				exit ( 1 ); 
-			}
-			
-			file_input = copy_string ( file_output );
-
-
-			
-		}
-
-		/* Take name from original file for create name for toc */
-		
-		if ( iat_option.output_given ) {
-			file_desc = copy_string ( iat_option.output_arg );
-			file_desc = smart_name ( file_desc, "toc" );
-		}
-		else file_desc = smart_name ( file_input, "toc" );
-		
-		printf ("Create %s from %s\n", file_desc, file_input);
-
-		/* Create toc file */
-		if ( ( fptrs.fdesc = fopen ( file_desc, "wb" ) ) == NULL ) {
-			fprintf ( stderr, "%s: %s\n", file_desc, strerror ( errno ) ) ;
-			exit ( 1 );
-		}	
-		
-		create_toc ( &fptrs, &img_struct, file_input );
-
-		free_allocated_memory ( ( void* ) file_input ); 
-		free_allocated_memory ( ( void* ) file_desc ); 
-
-		exit ( 0 );
-				
-	}	
-
-	if ( iat_option.cue_given ) {
-	
-		printf ( "Get info from %s :\n", iat_option.input_arg );		
-	
-		calculate_pregap ( &fptrs, &img_struct );
-
-		if ( ( img_struct.pregap > 0 ) || ( img_struct.block >= 2448 ) ) {
-			
-			printf ( "Image conversion :\n\t%s => ", file_input ); 
-			
-			if ( iat_option.output_given ) {
-				file_output = copy_string ( iat_option.output_arg );
-				file_output = smart_name ( file_output, "bin" );
-			}
-			else 	file_output = smart_name ( file_input, "bin" );
-
-			
-			if ( ( fptrs.fdest = fopen ( file_output, "wb" ) ) == NULL ) {
-				fprintf ( stderr, "%s: %s\n", file_desc, strerror ( errno ) ) ;
-				exit ( 1 );
-			}
-
-			printf( "%s", file_output );	
-
-			if ( img_struct.block == 2448 ) {
-				printf ( "\n\tWarning: Your image change from 2448 to 2352");
-				block = 2352;
-			}
-			else block = img_struct.block;
-			
-			printf ("\n");
-			
-			/* Convert your image for work with cue sheet file */
-			if ( ! ( img_2_bin ( &fptrs,  img_struct.block, block, img_struct.pregap ) ) )
-				{
-					printf ("ERROR\n");
-					exit ( 0 );
+				if ( AOK == n_value )
+					return_value = create_toc_or_cue ( &iat_option, &img_struct, &fptrs, TOC_FORMAT );
+				break;
+		case CUE_MODE :
+				if ( img_struct.block >= 2448 ) {
+					printf ( "\nWarning: YOUR IMAGE of 2448 will be TRANSFORMED to 2352\n" );
 				}
 
-			if ( fptrs.fsource ) fclose ( fptrs.fsource );
-			if ( fptrs.fdest ) fclose ( fptrs.fdest );				
-			
-			if ( ( fptrs.fsource = fopen ( file_output, "rb" ) ) == NULL ) {
-				fprintf ( stderr, "%s: %s\n", file_input, strerror ( errno ) ) ;
-				exit ( 1 ); 
-			}
-			
-			file_input = copy_string ( file_output );
-				
-		}				
-			
-		/* Take name from original file for create name for cue */
-		
-		if ( iat_option.output_given ) {
-			file_desc = copy_string ( iat_option.output_arg );
-			file_desc = smart_name ( file_desc, "cue" );
-		}
-		else file_desc = smart_name ( file_input, "cue" );
-		
-		printf ("Create %s from %s\n", file_desc, file_input);
+				if ( ( img_struct.pregap > 0 ) || ( img_struct.block >= 2448 ) ) {
+					n_value = ( ERROR == create_dat_or_bin ( &iat_option, &img_struct, &fptrs, BIN_FORMAT ) ) ? ERROR : AOK;
+					return_value = n_value;
+				}
 
-		/* Create cue file */
-		if ( ( fptrs.fdesc = fopen ( file_desc, "wb" ) ) == NULL ) {
-			fprintf ( stderr, "%s: %s\n", file_desc, strerror ( errno ) ) ;
-			exit ( 1 );
-		}	
-
-		create_cue ( &fptrs, &img_struct, file_input ) ;
-
-		if ( fptrs.fdesc ) fclose ( fptrs.fdesc );	
-		if ( fptrs.fsource ) fclose ( fptrs.fsource );
-
-		free_allocated_memory ( ( void* ) file_input ); 
-		free_allocated_memory ( ( void* ) file_desc ); 
-
-		exit ( 0 );
-	}	
-/* 
-	if ( iat_option.output_given ) {
-		if ( ( fptrs.fdest = fopen ( iat_option.output_arg, "wb" ) ) == NULL ) {
-       			fprintf ( stderr, "%s: %s\n", iat_option.output_arg, strerror ( errno ) ) ;
-                        exit ( 1 );
-                }
-	} else {
-                fprintf ( stderr, "Run %s --help to see the list of options.\n", argv [ 0 ] );
-                exit ( 1 );
-        }
-*/
-	if ( iat_option.iso_given ) {
-
-		if ( iat_option.output_given ) {
-			file_output = copy_string ( iat_option.output_arg );
-		}
-		else file_output =  smart_name ( file_input, "iso" );
-
-		
-		if ( ( fptrs.fdest = fopen ( file_output, "wb" ) ) == NULL ) {
-			fprintf ( stderr, "%s: %s\n", file_output, strerror ( errno ) ) ;
-                        exit ( 1 );
-		}
-
-		calculate_pregap ( &fptrs, &img_struct );
-
-		printf ("Create %s from %s\n", file_output, file_input);
-
-		if ( ( img_struct . pregap == 0 ) &&  ( ( img_struct . type == IMG_ISO ) || ( img_struct . type == IMG_VCD ) ) ) {
-		
-			switch ( img_struct . type ) {
-			
-				case IMG_ISO : 
-					printf ( "Warning : ISO iso9660 Image found, convertion not required \n" );
-					break;
-
-				case IMG_VCD :						
-					printf ( "Warning : SVCD ISO iso9660 Image found, convertion not required \n" );
-					break;
-				
-				default:
-					break;
-			}
-		} else {
-
-			switch ( img_struct . type ) {
-				
-				case IMG_ISO :
-					img_2_iso ( &fptrs, &img_struct );
-					break;
-					
-				case IMG_RAW :
-					bin_2_iso ( &fptrs, &img_struct );
-					break;
-					
-				case IMG_VCD :  case 9  : case 10 :
-					printf ( "Warning : VCD Image conversion, may not work in your standalone player \n" );	
-					bin_2_iso ( &fptrs, &img_struct );
-					break;
-				
-				default :
-					printf ( "No DATA found\n" );
-					break;
-			}
-		}
+				if ( AOK == n_value )
+					return_value = create_toc_or_cue ( &iat_option, &img_struct, &fptrs, CUE_FORMAT );
+				break;
+		case ISO_MODE :
+				return_value = iso_conversion ( &iat_option, &img_struct, &fptrs );
+				break;
+		default :
+				cmdline_parser_print_help();
+				return_value = AOK;
+				break;
 	}
-	
-	
+
 	if ( fptrs.fsource ) fclose ( fptrs.fsource );
-	if ( fptrs.fdest ) fclose ( fptrs.fdest );
+	free_allocated_memory ( ( void* ) file_input );
 
-/*	
-	free ( file_desc ); 
-	free ( file_input );
-
-*/
-	
-	return ( 0 );
+	return ( AOK );
 }
