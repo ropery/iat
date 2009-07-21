@@ -1,12 +1,12 @@
 /**
- * Copyright (C) 2009 
+ * Copyright (C) 2009
  *	- Salvatore Santagati <salvatore.santagati@gmail.com>
  * 	- Abdur Rab <c.abdur@yahoo.com>
  *
  * All rights reserved.
  *
- * This program is free software; under the terms of the 
- * GNU General Public License as published by the Free Software Foundation; 
+ * This program is free software; under the terms of the
+ * GNU General Public License as published by the Free Software Foundation;
  * either version 2 of the License, or (at your option) any later version.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,12 +14,12 @@
  * met:
  *
  * @ Redistributions of source code must retain the above copyright
- *   notice, this list of conditions and the following disclaimer. 
+ *   notice, this list of conditions and the following disclaimer.
  *
  * @ Redistributions in binary form must reproduce the above copyright
  *   notice, this list of conditions and the following disclaimer in
  *   the documentation and/or other materials provided with the
- *   distribution. 
+ *   distribution.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -72,25 +72,24 @@ void free_allocated_memory ( void* pointer_to_free );
 
 /* ---@copy_string@ ---*
 *
-* Arguments:	@char* cp_string@ = pointer to string to be copied
+* Arguments:	@const char* cp_string@ = pointer to string to be copied
 *
 * Returns:	The copied string if successful, @NULL@ otherwise.
 *
 * Use:		Copies the string to the newly allocated space.
 *
 */
-unsigned char* copy_string ( char* cp_string );
+char* copy_string ( const char* cp_string );
 
 /* ---@smart_name@ ---*
 *
-* Arguments:	@char *new@ = pointer to new name
-*		@char *original@ = pointer to original base name
-*		@char *ext@ = pointer a new extention
+* Arguments:	@const char *original@ = pointer to original base name
+*		@const char *ext@ = pointer a new extention
 *
 * Use:		Create name for file
 *
 */
-char* smart_name ( const char* original, char* ext );
+char* smart_name ( const char* original, const char* ext );
 
 
 /*unsigned char* smart_name ( char* cp_string, char* ext_string );
@@ -98,7 +97,7 @@ char* smart_name ( const char* original, char* ext );
 /* --- @lba2msf@ --- *
  *
  * Arguments:   @off_t lba@ = logical block addres size
- *              @msf_mode_block *msf_block@ = pointer struct of BCD 
+ *              @msf_mode_block *msf_block@ = pointer struct of BCD
  *
  *
  * Use:         Reads LBA and translate msf.
@@ -146,7 +145,7 @@ int is_svcd_sub_header ( unsigned char* header );
  *
  * Returns:	mode of image, @-1@ otherwise
  *
- * Use:		convert image to image.  
+ * Use:		convert image to image.
  */
 int img_2_img ( file_ptrs* fptrs,  int block_old, int block_new, off_t pregap );
 
