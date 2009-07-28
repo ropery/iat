@@ -147,9 +147,8 @@ off_t calculate_pregap ( file_ptrs* fptrs,  image_struct*  img_struct )
 		set_file_pointer ( fptrs -> fsource, n_loop );
 		fread ( buf, sizeof ( char ), 12, fptrs -> fsource );
 
-       		progress_bar ( ( ( n_loop + 1 ) * 100 ) / img_size );
-		
-	
+		progress_bar ( ( int ) ( ( ( n_loop + 1 ) * 100 ) / img_size ) );
+
 		if ( !memcmp ( HEADER_ID, buf, 12 ) ) {
 			if ( ( img_struct -> type == 0 ) || ( img_struct -> type == 2 ) ) {
 				img_struct -> type += 1;
@@ -192,6 +191,8 @@ off_t calculate_pregap ( file_ptrs* fptrs,  image_struct*  img_struct )
 	
 	/* Detect Header bytes */
 	img_struct -> pregap = calculate_pregap_length ( cd_id_start, img_struct , header );
+
+	img_struct -> type = ( ( 2048 == img_struct -> block ) && ( 0 == img_struct -> pregap ) ) ? IMG_ISO : img_struct -> type;
 
 	return ( 0 );	
 }

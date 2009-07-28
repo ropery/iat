@@ -72,19 +72,16 @@ typedef struct struct_descriptor {
 	int frame;
 } struct_cue, struct_toc;
 
-/* --- @img_2_bin@ --- *
+/* --- @is_mode@ --- *
  *
- * Arguments:   @file_ptrs *fptrs@ = input file
- * 		@int block_old@ = size of origin block
- *		@int block_new@ = size of new block
- *		@off_t pregap@ = length of pregap
- *
+ * Arguments:   @file_ptrs *fptrs @ = input file
+ * 		@image_struct *img_struct@ = pointer to struct of image information
  *
  * Returns:	mode of image, @-1@ otherwise
  *
- * Use:		convert image to image as compatible for cuesheet file. 
- */	
-int img_2_bin ( file_ptrs* fptrs,  int block_old, int block_new, off_t pregap );
+ * Use:         read first block of image and return type of mode.
+ */
+int is_mode ( file_ptrs* fptrs, image_struct* img_struct );
 
 /* --- @track_vcd@ --- *
  *

@@ -231,44 +231,90 @@ int is_svcd_sub_header ( unsigned char* header )
 	return ( n_return_value );
 }
 
-/* --- @img_2_img@ --- *
+/* --- @progress_bar@ --- *
  *
- * Arguments:   @file_ptrs *fptrs@ = input file
- * 		@int block_old@ = size of origin block
- *		@int block_new@ = size of new block
- *		@off_t pregap@ = length of pregap
+ * Arguments:	@int percentage@ = percentage value
  *
+ * Returns:	---
  *
- * Returns:	mode of image, @-1@ otherwise
- *
- * Use:		convert image to image.
+ * Use:		Displays a command line progress bar.
  */
-int img_2_img ( file_ptrs* fptrs,  int block_old, int block_new, off_t pregap )
+void progress_bar ( int percentage )
 {
-        int	return_value = ERROR;
-	char*	fimg =  NULL;
-	off_t	n_loop;
-	off_t	n_img_size;
+	char		roller [ ] = { "-\\|/" }; /* For the processing */
+	char		roller_ch = 0; /* Progress roller */
+	char		arrow_head = 0; /* Progress arrow */
+	static int	previous_percentage = -1; /* Previous percentage */
 
-	if ( ( n_img_size = get_file_size ( fptrs -> fsource ) ) < 1 ) return ( return_value ); /* The image file is empty */
-	if ( NULL == ( fimg = malloc ( sizeof ( char ) * block_old ) ) ) return ( return_value ); /* Could not allocate memory */
-
-	set_file_pointer ( fptrs -> fsource, pregap );
-
-	for ( n_loop = pregap  ; n_loop <  n_img_size ; n_loop += block_old ) {
-		progress_bar ( ( ( n_loop + 1 ) * 100 ) / n_img_size );
-		memset ( fimg, 0, ( unsigned int ) block_old );
-		fread  ( fimg , 1, ( unsigned int ) block_old, fptrs -> fsource );
-		fwrite ( fimg, 1, ( unsigned int ) block_new, fptrs -> fdest );
-		return_value = AOK;
+	if ( percentage == previous_percentage ) return;  /* Nothing changed */
+	if ( percentage == 100 ) {
+		previous_percentage = -1;
+		roller_ch = ' ';
+		arrow_head = '=';
+	} else {
+		previous_percentage = percentage;
+		roller_ch = roller [ ( percentage % 4 ) ];
+		arrow_head = '>';
 	}
 
-	set_file_pointer ( fptrs -> fsource, ( off_t ) 0 );
-	free_allocated_memory ( ( void* ) fimg );
+	printf("%c%3d%% [:%.*s%c%.*s:]\r", roller_ch, percentage, ( percentage / 5 ),
+		"====================", arrow_head, ( 20 - ( percentage / 5 ) ),"                    ");
+	fflush ( stdout );
+}
 
+/* --- @write_2_file@ --- *
+ *
+ * Arguments:	@FILE *fptr@ = pointer to FILE
+ * 		@unsigned char* buf_ptr@ = pointer to buffer to be written to file
+ * 		@size_t n_len@ = length of bytes to be written
+ *
+ * Returns:	size written in the file, @0@ otherwise
+ *
+ * Use:		Write to an iso file.
+ */
+off_t write_2_file ( FILE* fptr, unsigned char* buf_ptr, size_t n_len )
+{
+	if ( ( n_len < 1 ) || ( NULL == fptr ) || ( NULL == buf_ptr ) ) return ( -1 );
+	return ( ( off_t ) fwrite ( buf_ptr, sizeof ( unsigned char ), n_len, fptr ) );
+}
+
+/* --- @img_2_img@ --- *
+ *
+ * Arguments:   @file_ptrs *fptrs@ = pointer struct of source and destination file
+ *              @image_struct *img_struct@ = struct of image info
+ *              @int block@ = size of block to be written
+ *
+ * Returns:     AOK on success, @ERROR@ otherwise.
+ *
+ * Use:         Converts the image to an image of block size provided by the block and discards the rest.
+ */
+int img_2_img ( file_ptrs* fptrs, image_struct*  img_struct, size_t block )
+{
+        off_t    	n_loop = 0;
+        off_t    	n_img_size = 0;
+	unsigned char*	data_buffer = NULL;
+        int     	return_value = ERROR;
+
+	if ( ( n_img_size = get_file_size ( fptrs -> fsource ) ) < 1 ) return ( return_value ); /* The image file is empty */
+	if ( NULL == ( data_buffer = ( unsigned char* ) malloc ( sizeof ( unsigned char ) * ( img_struct -> block ) ) ) )
+		return ( return_value ); /* Could not allocate memory */
+
+	set_file_pointer ( fptrs -> fsource, ( off_t ) img_struct -> pregap );
+
+	for ( n_loop = img_struct -> pregap  ; n_loop <  n_img_size ; n_loop += img_struct -> block ) {
+		progress_bar ( ( int ) ( ( ( n_loop + 1 ) * 100 ) / n_img_size ) );
+		memset ( data_buffer, 0, img_struct -> block );
+		fread ( data_buffer , sizeof ( unsigned char ),  img_struct -> block, fptrs -> fsource );
+		write_2_file ( fptrs -> fdest, ( void* ) data_buffer, block );
+	}
+	free ( data_buffer );
+
+	set_file_pointer ( fptrs -> fsource, ( off_t ) 0 );
+
+	return_value = AOK;
 	progress_bar ( 100 );
-	printf ( "\n\n" );
+
+	printf ( "\n" );
 
 	return ( return_value );
 }
-

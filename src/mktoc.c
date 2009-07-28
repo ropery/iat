@@ -256,8 +256,8 @@ int create_vcd_toc ( file_ptrs* fptrs, image_struct* img_struct, char *file_inpu
 	
 	while ( n_loop <  n_img_size ) {
 
-      		progress_bar ( ( ( n_loop + 1 ) * 100 ) / n_img_size );
-		
+		progress_bar ( ( int ) ( ( ( n_loop + 1 ) * 100 ) / n_img_size ) );
+
 		if ( track_vcd ( fptrs, img_struct, &toc, n_loop ) == AOK ) {
 			
 			toc.track++;
@@ -279,9 +279,9 @@ int create_vcd_toc ( file_ptrs* fptrs, image_struct* img_struct, char *file_inpu
 		}
 				
 
-	loop_cur++;
+		loop_cur++;
 
-	n_loop += img_struct->block;
+		n_loop += img_struct->block;
 
 	}
 

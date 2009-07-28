@@ -367,8 +367,8 @@ cmdline_parser_required (struct gengetopt_args_info *args_info, const char *prog
 int
 cmdline_parser_required2 (struct gengetopt_args_info *args_info, const char *prog_name, const char *additional_error)
 {
-  FIX_UNUSED (additional_error);
   int error = 0;
+  FIX_UNUSED (additional_error);
 
   /* checks for required options */
   
@@ -426,7 +426,7 @@ int update_arg(void *field, char **orig_field,
                cmdline_parser_arg_type arg_type,
                int check_ambiguity, int override,
                int no_free, int multiple_option,
-               const char *long_opt, char short_opt,
+               const char *long_opt, int short_opt,
                const char *additional_error)
 {
   FIX_UNUSED (field);
@@ -440,7 +440,7 @@ int update_arg(void *field, char **orig_field,
 
   if (!multiple_option && prev_given && (*prev_given || (check_ambiguity && *field_given)))
     {
-      if (short_opt != '-')
+      if ((char)short_opt != '-')
         fprintf (stderr, "%s: `--%s' (`-%c') option given more than once%s\n", 
                package_name, long_opt, short_opt,
                (additional_error ? additional_error : ""));
@@ -812,7 +812,7 @@ cmdline_parser_string_ext(const char *cmdline, struct gengetopt_args_info *args_
   argc = cmdline_parser_create_argv(cmdline, &argv_ptr, prog_name);
   
   result =
-    cmdline_parser_internal (argc, argv_ptr, args_info, params, 0);
+    cmdline_parser_internal ((int)argc, argv_ptr, args_info, params, 0);
   
   if (argv_ptr)
     {

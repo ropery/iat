@@ -42,25 +42,40 @@
 #include "mkcore.h"
 #endif
 
-/* --- @img_2_bin@ --- *
+/* --- @is_mode@ --- *
  *
- * Arguments:   @file_ptrs *fptrs@ = input file
- * 		@int block_old@ = size of origin block
- *		@int block_new@ = size of new block
- *		@off_t pregap@ = length of pregap
- *
+ * Arguments:   @file_ptrs *fptrs @ = input file
+ * 		@image_struct *img_struct@ = pointer to struct of image information
  *
  * Returns:	mode of image, @-1@ otherwise
  *
- * Use:		convert image to image as compatible for cuesheet file. 
+ * Use:         Reads the first block of image and returns mode.
  */
-int img_2_bin ( file_ptrs* fptrs,  int block_old, int block_new, off_t pregap )
+int is_mode ( file_ptrs* fptrs, image_struct* img_struct )
 {
-	int n_return_value = ERROR; 
+	int mode = -1;
+	msf_mode_block	msf_block = {0};
 
-	if ( img_2_img ( fptrs, block_old, block_new, pregap ) ) n_return_value = AOK;
+	switch ( ( img_struct-> block ) ) {
+		case 2048:
+			mode = 1;
+			break;
+		case 2336:
+			mode = 2;
+			break;
+		case 2352:
+		case 2448:
+			set_file_pointer ( fptrs -> fsource, ( off_t ) ( img_struct -> pregap + 12 ) );
+			fread ( &msf_block, sizeof ( msf_mode_block ), 1,  fptrs->fsource );
+			mode = ( int ) *( msf_block.mode );
+			mode = ( ( 0 <= mode ) && ( 2 >= mode ) ) ? mode : -1;
+			set_file_pointer ( fptrs -> fsource, ( off_t ) 0 );
+			break;
+		default:
+			break;
+	}
 
-	return ( n_return_value );	
+	return ( mode );
 }
 
 /* --- @track_vcd@ --- *

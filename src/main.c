@@ -74,6 +74,10 @@
 #include "mkcue.h"
 #endif
 
+#ifndef MKTOC_H
+#include "mktoc.h"
+#endif
+
 #define DAT_FORMAT	0
 #define BIN_FORMAT	1
 
@@ -85,7 +89,6 @@
 #define TOC_MODE	2
 #define CUE_MODE	3
 #define ISO_MODE	4
-
 
 /* ---@create_toc_or_cue@ ---*
 *
@@ -154,7 +157,7 @@ int create_dat_or_bin ( iat_parser* iat_option, image_struct* img_struct, file_p
 	int return_value = ERROR;
 	char* file_output = NULL;
 	char ext [ 2 ] [ 4 ] = { 0 };
-	int block = 0;
+	size_t block = 0;
 
 	if ( ( NULL == iat_option ) || ( NULL == img_struct ) || ( NULL == fptrs ) ) return ( return_value );
 
@@ -186,8 +189,7 @@ int create_dat_or_bin ( iat_parser* iat_option, image_struct* img_struct, file_p
 			break;
 	}
 
-	/* Convert your image to dat or bin */
-	if ( ! ( img_2_bin ( fptrs,  ( int ) img_struct -> block, block, ( off_t ) img_struct -> pregap ) ) ) {
+	if ( AOK != ( img_2_img ( fptrs, img_struct, block ) ) ) {
 		printf ("\nERROR");
 		free_allocated_memory ( ( void* ) file_output );
 		return ( return_value );
@@ -218,17 +220,6 @@ int iso_conversion ( iat_parser* iat_option, image_struct* img_struct, file_ptrs
 
 	if ( ( NULL == iat_option ) || ( NULL == img_struct ) || ( NULL == fptrs ) ) return ( return_value );
 
-	if ( iat_option -> output_given ) file_output = copy_string ( iat_option -> output_arg );
-	else file_output =  smart_name ( iat_option -> input_arg, "iso" );
-
-	if ( NULL == ( fptrs -> fdest = fopen ( file_output, "wb" ) ) ) {
-		fprintf ( stderr, "%s: %s\n", file_output, strerror ( errno ) );
-		free_allocated_memory ( ( void* ) file_output );
-                return ( return_value );
-	}
-
-	printf ( "Create %s from %s\n", file_output, iat_option -> input_arg );
-
 	if ( ( img_struct -> pregap == 0 ) &&  ( ( img_struct -> type == IMG_ISO ) || ( img_struct -> type == IMG_VCD ) ) ) {
 		switch ( img_struct -> type ) {
 
@@ -244,21 +235,33 @@ int iso_conversion ( iat_parser* iat_option, image_struct* img_struct, file_ptrs
 				break;
 		}
 	} else {
+		if ( iat_option -> output_given ) file_output = copy_string ( iat_option -> output_arg );
+		else file_output =  smart_name ( iat_option -> input_arg, "iso" );
+
+		if ( NULL == ( fptrs -> fdest = fopen ( file_output, "wb" ) ) ) {
+			fprintf ( stderr, "%s: %s\n", file_output, strerror ( errno ) );
+			free_allocated_memory ( ( void* ) file_output );
+			return ( return_value );
+		}
+
+		printf ( "Create %s from %s\n", file_output, iat_option -> input_arg );
 
 		switch ( img_struct -> type ) {
 
 			case IMG_ISO :
+				printf ( "Block :%d\n", img_struct -> block );
 				img_2_iso ( fptrs, img_struct );
 				return_value = AOK;
 				break;
 
 			case IMG_RAW :
+				printf ( "RAW Block :%d\n", img_struct -> block );
 				bin_2_iso ( fptrs, img_struct );
 				return_value = AOK;
 				break;
 
 			case IMG_VCD :  case 9  : case 10 :
-				printf ( "Warning : VCD Image conversion, may not work in your standalone player \n" );
+				printf ( "Warning : VCD Image conversion, may not work in your standalone player :%d\n", img_struct -> block );
 				bin_2_iso ( fptrs, img_struct );
 				return_value = AOK;
 				break;
@@ -267,10 +270,10 @@ int iso_conversion ( iat_parser* iat_option, image_struct* img_struct, file_ptrs
 				printf ( "No DATA found\n" );
 				break;
 		}
-	}
 
-	fclose ( fptrs -> fdest );
-	free_allocated_memory ( ( void* ) file_output );
+		fclose ( fptrs -> fdest );
+		free_allocated_memory ( ( void* ) file_output );
+	}
 
 	return ( return_value );
 }

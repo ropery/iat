@@ -49,12 +49,9 @@
 extern "C" {
 #endif  /* __cplusplus */
 
-
 #ifndef MKCORE_H
 #include "mkcore.h"
 #endif
-
-
 
 /* --- @print_cue_index@ --- *
  *
@@ -105,17 +102,6 @@ void print_cue_file ( file_ptrs* fptrs, char *file_input );
 /*
 void print_cue ( file_ptrs* fptrs, struct_cue* cue );
 */
-/* --- @is_mode@ --- *
- *
- * Arguments:   @file_ptrs *fptrs @ = input file
- * 		@image_struct *img_struct@ = pointer struct of type image and pregap of image
- *
- *
- * Returns:	mode of image, @-1@ otherwise
- *
- * Use:         read first block of image and return type of mode.
- */
-int is_mode ( file_ptrs* fptrs, image_struct* img_struct );
 
 /* --- @create_first_track@ --- *
  *
@@ -182,7 +168,6 @@ int track_vcd_cue ( file_ptrs* fptrs, image_struct* img_struct, struct_cue* cue,
  * Use:         generate a cuesheet for vcd.
  */
 int create_vcd_cue ( file_ptrs* fptrs, image_struct* img_struct, char *file_input );
-
 
 /* --- @create_cue@ --- *
  *

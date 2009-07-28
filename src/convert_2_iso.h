@@ -62,104 +62,82 @@ extern "C" {
 #include "mmc2r11.h"
 #endif
 
-/* --- @write_2_file@ --- *
- *
- * Arguments:	@FILE *fptr@ = pointer to FILE
- * 		@unsigned char* buf_ptr@ = pointer to buffer to be written to file
- * 		@size_t n_len@ = length of bytes to be written
- *
- * Returns:	zero if success, @-1@ otherwise
- *
- * Use:		Write to an iso file.
- */
-long write_2_file ( FILE* fptr, unsigned char* buf_ptr, size_t n_len );
-
-/* --- @progress_bar@ --- *
- *
- * Arguments:	@int percentage@ = percentage value
- *
- * Returns:	---
- *
- * Use:		Displays a command line progress bar.
- */
-void progress_bar ( int percentage );
-
 /* --- @mode_0@ --- *
  *
  * Arguments:	@file_ptrs *fptrs@ = pointer struct of source and destination file
- * 		@long n_fptr_pos@ = the position of byte from where to be read
+ * 		@off_t n_fptr_pos@ = the position of byte from where to be read
  *
  * Returns:	the number of bytes read, @-1@ otherwise
  *
  * Use:		Reads into the buffer and writes the buffer to destination file.
  */
-long mode_0 ( file_ptrs* fptrs, long n_fptr_pos );
+off_t mode_0 ( file_ptrs* fptrs, off_t n_fptr_pos );
 
 /* --- @mode_1@ --- *
  *
  * Arguments:	@file_ptrs *fptrs@ = pointer struct of source and destination file
- * 		@long n_fptr_pos@ = the position of byte from where to be read
+ * 		@off_t n_fptr_pos@ = the position of byte from where to be read
  *
  * Returns:	the number of bytes read, @-1@ otherwise
  *
  * Use:		Reads into the buffer and writes the buffer to destination file.
  */
-long mode_1 ( file_ptrs* fptrs, long n_fptr_pos );
+off_t mode_1 ( file_ptrs* fptrs, off_t n_fptr_pos );
 
 /* --- @mode_2_form_1@ --- *
  *
  * Arguments:	@file_ptrs *fptrs@ = pointer struct of source and destination file
- * 		@long n_fptr_pos@ = the position of byte from where to be read
+ * 		@off_t n_fptr_pos@ = the position of byte from where to be read
  *
  * Returns:	the number of bytes read, @-1@ otherwise
  *
  * Use:		Reads into the buffer and writes the buffer to destination file.
  */
-long mode_2_form_1 ( file_ptrs* fptrs, long n_fptr_pos );
+off_t mode_2_form_1 ( file_ptrs* fptrs, off_t n_fptr_pos );
 
 /* --- @mode_2_form_2@ --- *
  *
  * Arguments:	@file_ptrs *fptrs@ = pointer struct of source and destination file
- * 		@long n_fptr_pos@ = the position of byte from where to be read
+ * 		@off_t n_fptr_pos@ = the position of byte from where to be read
  *
  * Returns:	the number of bytes read, @-1@ otherwise
  *
  * Use:		Reads into the buffer and writes the buffer to destination file.
  */
-long mode_2_form_2 ( file_ptrs* fptrs, long n_fptr_pos );
+off_t mode_2_form_2 ( file_ptrs* fptrs, off_t n_fptr_pos );
 
 /* --- @mode_2@ --- *
  *
  * Arguments:	@file_ptrs *fptrs@ = pointer struct of source and destination file
- * 		@long n_fptr_pos@ = the position of byte from where to be read
+ * 		@off_t n_fptr_pos@ = the position of byte from where to be read
  *
  * Returns:	the number of bytes read, @-1@ otherwise
  *
  * Use:		Reads into the buffer and writes the buffer to destination file.
  */
-long mode_2 ( file_ptrs* fptrs, long n_fptr_pos );
+off_t mode_2 ( file_ptrs* fptrs, off_t n_fptr_pos );
 
 /* --- @mode_2_form_1_headerless@ --- *
  *
  * Arguments:	@file_ptrs *fptrs@ = pointer struct of source and destination file
- * 		@long n_fptr_pos@ = the position of byte from where to be read
+ * 		@off_t n_fptr_pos@ = the position of byte from where to be read
  *
  * Returns:	the number of bytes read, @-1@ otherwise
  *
  * Use:		Reads into the buffer and writes the buffer to destination file.
  */
-long mode_2_form_2_headerless ( file_ptrs* fptrs, long n_fptr_pos );
+off_t mode_2_form_2_headerless ( file_ptrs* fptrs, off_t n_fptr_pos );
 
 /* --- @mode_2_form_2_headerless@ --- *
  *
  * Arguments:	@file_ptrs *fptrs@ = pointer struct of source and destination file
- * 		@long n_fptr_pos@ = the position of byte from where to be read
+ * 		@off_t n_fptr_pos@ = the position of byte from where to be read
  *
  * Returns:	the number of bytes read, @-1@ otherwise
  *
  * Use:		Reads into the buffer and writes the buffer to destination file.
  */
-long mode_2_form_2_headerless ( file_ptrs* fptrs, long n_fptr_pos );
+off_t mode_2_form_2_headerless ( file_ptrs* fptrs, off_t n_fptr_pos );
 
 /* --- @bin_2_iso@ --- *
  *

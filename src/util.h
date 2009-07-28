@@ -45,6 +45,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <fcntl.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -53,7 +55,6 @@ extern "C" {
 #ifndef DEFINE_H
 #include "define.h"
 #endif
-
 
 #ifndef MMC2R11_H
 #include "mmc2r11.h"
@@ -91,9 +92,6 @@ char* copy_string ( const char* cp_string );
 */
 char* smart_name ( const char* original, const char* ext );
 
-
-/*unsigned char* smart_name ( char* cp_string, char* ext_string );
-*/
 /* --- @lba2msf@ --- *
  *
  * Arguments:   @off_t lba@ = logical block addres size
@@ -135,19 +133,39 @@ off_t  set_file_pointer ( FILE* fptr, off_t n_pos );
  */
 int is_svcd_sub_header ( unsigned char* header );
 
+/* --- @progress_bar@ --- *
+ *
+ * Arguments:	@int percentage@ = percentage value
+ *
+ * Returns:	---
+ *
+ * Use:		Displays a command line progress bar.
+ */
+void progress_bar ( int percentage );
+
+/* --- @write_2_file@ --- *
+ *
+ * Arguments:	@FILE *fptr@ = pointer to FILE
+ * 		@unsigned char* buf_ptr@ = pointer to buffer to be written to file
+ * 		@size_t n_len@ = length of bytes to be written
+ *
+ * Returns:	zero if success, @-1@ otherwise
+ *
+ * Use:		Write to an iso file.
+ */
+off_t write_2_file ( FILE* fptr, unsigned char* buf_ptr, size_t n_len );
+
 /* --- @img_2_img@ --- *
  *
- * Arguments:   @file_ptrs *fptrs@ = input file
- * 		@int block_old@ = size of origin block
- *		@int block_new@ = size of new block
- *		@off_t pregap@ = length of pregap
+ * Arguments:   @file_ptrs *fptrs@ = pointer struct of source and destination file
+ *              @image_struct *img_struct@ = struct of image info
+ *              @int block@ = size of block to be written
  *
+ * Returns:     AOK on success, @ERROR@ otherwise.
  *
- * Returns:	mode of image, @-1@ otherwise
- *
- * Use:		convert image to image.
+ * Use:         Converts the image to an image of block size provided by the block and discards the rest.
  */
-int img_2_img ( file_ptrs* fptrs,  int block_old, int block_new, off_t pregap );
+int img_2_img ( file_ptrs* fptrs, image_struct*  img_struct, size_t block );
 
 #ifdef __cplusplus
 } 	/* extern "C" */

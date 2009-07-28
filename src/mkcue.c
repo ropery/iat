@@ -37,11 +37,10 @@
  * Free Software Foundation, Inc.,
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
+
 #ifndef MKCUE_H
 #include "mkcue.h"
 #endif
-
-
 
 /* --- @print_cue_index@ --- *
  *
@@ -86,62 +85,6 @@ void print_cue_track ( file_ptrs* fptrs, struct_cue* cue )
 void print_cue_file ( file_ptrs* fptrs, char *file_input )
 {
 	fprintf ( fptrs->fdesc, "FILE \"%s\" BINARY\n", file_input);
-}
-
-/* --- @is_mode@ --- *
- *
- * Arguments:   @file_ptrs *fptrs @ = input file
- * 		@image_struct *img_struct@ = pointer struct of type image and pregap of image
- *
- *
- * Returns:	mode of image, @-1@ otherwise
- *
- * Use:         read first block of image and return type of mode.
- */
-int is_mode ( file_ptrs* fptrs, image_struct* img_struct )
-{
-	int mode = -1;
-	off_t n_loop;
-
-	msf_mode_block	msf_block;
-	
-	switch ( ( img_struct-> block ) ) {
-		case 2048:
-			mode = 1;
-			break;
-		case 2336:
-			mode = 2;
-			break;
-		case 2352:
-		case 2448:	
-			
-			n_loop = img_struct -> pregap + 12;
-
-			set_file_pointer ( fptrs -> fsource, ( n_loop  ) );
-
-			fread ( &msf_block, sizeof ( msf_mode_block ), 1,  fptrs->fsource );
-
-			switch  ( *( msf_block.mode ) ) {
-				case 0: 
-					mode = 0;
-					break;
-				case 1:
-					mode = 1;
-					break;
-				case 2:
-					mode = 2;
-					break;
-				default:
-					break;
-			}
-
-			break;
-			
-		default:
-			break;
-	}
-	
-	return ( mode );
 }
 
 /* --- @create_first_track@ --- *
@@ -261,7 +204,7 @@ int create_vcd_cue ( file_ptrs* fptrs, image_struct* img_struct, char *file_inpu
 {
 	off_t n_loop;
 	off_t n_img_size;
-	int number_block = 0;	
+	off_t number_block = 0;
 
 	struct_cue 		cue;
 	msf_mode_block		msf_block;
@@ -274,8 +217,8 @@ int create_vcd_cue ( file_ptrs* fptrs, image_struct* img_struct, char *file_inpu
 	
 	while ( n_loop <  n_img_size ) {
 
-       		progress_bar ( ( ( n_loop + 1 ) * 100 ) / n_img_size );
-		
+		progress_bar ( ( int ) ( ( ( n_loop + 1 ) * 100 ) / n_img_size ) );
+
 		if ( track_vcd_cue ( fptrs, img_struct, &cue, n_loop ) == AOK ) {
 			cue.track++;
 			
@@ -289,10 +232,10 @@ int create_vcd_cue ( file_ptrs* fptrs, image_struct* img_struct, char *file_inpu
 			print_cue_index ( fptrs, &cue );	
 		
 		}
-				
-	number_block++;
 
-	n_loop += img_struct->block;
+		number_block++;
+
+		n_loop += img_struct -> block;
 
 	}
 	

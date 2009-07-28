@@ -222,14 +222,14 @@ void display_sub_mode ( sub_mode_info* current )
  * Arguments:   @unsigned char* buffer@ = pointer to the buffer
  *              @image_struct *img_struct@ = pointer struct of type image and pregap of image
  *		@sub_mode_info* previous@ = previous block mode information
- *		@long block_number@ = block number from the start
+ *		@off_t block_number@ = block number from the start
  *		@off_t n_loop@ = number of byte from where the block starts
  *
  * Returns:     Zeor on success, @-1@ on error.
 
  * Use:         Displays the mode information.
  */
-int display_mode_info ( unsigned char* buffer, image_struct*  img_struct, sub_mode_info* previous, long	block_number, off_t n_loop )
+int display_mode_info ( unsigned char* buffer, image_struct*  img_struct, sub_mode_info* previous, off_t block_number, off_t n_loop )
 {
 	/* SYNCH HEADER */
         unsigned const char HEADER_ID [ 12 ] = { 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00 };
@@ -355,7 +355,7 @@ int debug ( file_ptrs* fptrs,  image_struct*  img_struct )
 {
 	off_t   		n_loop = 0;
         off_t   		img_size = 0;
-	long			block_number = 0;
+	off_t			block_number = 0;
 	int			pvd_info = 0;
 	iso_primary_descriptor	pvd;	 /* Volume Descriptor */
 	/*iso_vd_primary		pvd;*/
@@ -407,16 +407,9 @@ int debug ( file_ptrs* fptrs,  image_struct*  img_struct )
 			n_loop += img_struct -> block;
 			block_number++;
 		}
-		
-
 
 		free ( buffer );
 	}
 
-
-
-
 	return ( 0 );
 }
-
-

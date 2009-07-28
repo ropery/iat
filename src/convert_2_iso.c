@@ -65,63 +65,16 @@ void print ( unsigned char* ptr, int n_len )
 	}
 }
 
-/* --- @write_2_file@ --- *
- *
- * Arguments:	@FILE *fptr@ = pointer to FILE
- * 		@unsigned char* buf_ptr@ = pointer to buffer to be written to file
- * 		@size_t n_len@ = length of bytes to be written
- *
- * Returns:	size written in the file, @-1@ otherwise
- *
- * Use:		Write to an iso file.
- */
-long write_2_file ( FILE* fptr, unsigned char* buf_ptr, size_t n_len )
-{
-	if ( ( n_len < 1 ) || ( NULL == fptr ) || ( NULL == buf_ptr ) ) return ( -1 );
-	return ( ( long ) fwrite ( buf_ptr, sizeof ( unsigned char ), n_len, fptr ) );
-}
-
-/* --- @progress_bar@ --- *
- *
- * Arguments:	@int percentage@ = percentage value
- *
- * Returns:	---
- *
- * Use:		Displays a command line progress bar.
- */
-void progress_bar ( int percentage )
-{
-	char		roller [ ] = { "-\\|/" }; /* For the processing */
-	char		roller_ch = 0; /* Progress roller */
-	char		arrow_head = 0; /* Progress arrow */
-	static int	previous_percentage = -1; /* Previous percentage */
-
-	if ( percentage == previous_percentage ) return;  /* Nothing changed */
-	if ( percentage == 100 ) {
-		previous_percentage = -1;
-		roller_ch = ' ';
-		arrow_head = '=';
-	} else {
-		previous_percentage = percentage;
-		roller_ch = roller [ ( percentage % 4 ) ];
-		arrow_head = '>';
-	}
-	
-	printf("%c%3d%% [:%.*s%c%.*s:]\r", roller_ch, percentage, ( percentage / 5 ), 
-			"====================", arrow_head, ( 20 - ( percentage / 5 ) ),"                    ");
-	fflush ( stdout );
-}
-
 /* --- @mode_0@ --- *
  *
  * Arguments:	@file_ptrs *fptrs@ = pointer struct of source and destination file
- * 		@long n_fptr_pos@ = the position of byte from where to be read
+ * 		@off_t n_fptr_pos@ = the position of byte from where to be read
  *
  * Returns:	the number of bytes read, @-1@ otherwise
  *
  * Use:		Reads into the buffer and writes the buffer to destination file.
  */
-long mode_0 ( file_ptrs* fptrs, long n_fptr_pos )
+off_t mode_0 ( file_ptrs* fptrs, off_t n_fptr_pos )
 {
 	/* Mode 0 (2352): Syncheader (12), MSF / BCD (3), Mode (1), Data (2336) */
 	mode_generic		mgen; /* Mode 0 and Mode 2 Formless */
@@ -137,13 +90,13 @@ long mode_0 ( file_ptrs* fptrs, long n_fptr_pos )
 /* --- @mode_1@ --- *
  *
  * Arguments:	@file_ptrs *fptrs@ = pointer struct of source and destination file
- * 		@long n_fptr_pos@ = the position of byte from where to be read
+ * 		@off_t n_fptr_pos@ = the position of byte from where to be read
  *
  * Returns:	the number of bytes read, @-1@ otherwise
  *
  * Use:		Reads into the buffer and writes the buffer to destination file.
  */
-long mode_1 ( file_ptrs* fptrs, long n_fptr_pos )
+off_t mode_1 ( file_ptrs* fptrs, off_t n_fptr_pos )
 {
 	/* Mode 1 (2352): Syncheader (16), Data (2048), CRC (4), Subheader (8), ECC (276) */
 	mode_one		mone; /* Mode 1 */
@@ -159,13 +112,13 @@ long mode_1 ( file_ptrs* fptrs, long n_fptr_pos )
 /* --- @mode_2_form_1@ --- *
  *
  * Arguments:	@file_ptrs *fptrs@ = pointer struct of source and destination file
- * 		@long n_fptr_pos@ = the position of byte from where to be read
+ * 		@off_t n_fptr_pos@ = the position of byte from where to be read
  *
  * Returns:	the number of bytes read, @-1@ otherwise
  *
  * Use:		Reads into the buffer and writes the buffer to destination file.
  */
-long mode_2_form_1 ( file_ptrs* fptrs, long n_fptr_pos )
+off_t mode_2_form_1 ( file_ptrs* fptrs, off_t n_fptr_pos )
 {
 	/* Mode 2 Form 1 (2352): Syncheader (16), Subheader (8), Data (2048), ECC (280) */
 	mode_two_form_1		m2f1; /* Mode 2 Form 1 */
@@ -181,13 +134,13 @@ long mode_2_form_1 ( file_ptrs* fptrs, long n_fptr_pos )
 /* --- @mode_2_form_2@ --- *
  *
  * Arguments:	@file_ptrs *fptrs@ = pointer struct of source and destination file
- * 		@long n_fptr_pos@ = the position of byte from where to be read
+ * 		@off_t n_fptr_pos@ = the position of byte from where to be read
  *
  * Returns:	the number of bytes read, @-1@ otherwise
  *
  * Use:		Reads into the buffer and writes the buffer to destination file.
  */
-long mode_2_form_2 ( file_ptrs* fptrs, long n_fptr_pos )
+off_t mode_2_form_2 ( file_ptrs* fptrs, off_t n_fptr_pos )
 {
 	/* Mode 2 Form 2 (2352): Syncheader (16), Subheader (8), Data (2324), CRC (4) */
 	mode_two_form_2		m2f2; /* Mode 2 Form 2 */
@@ -203,17 +156,17 @@ long mode_2_form_2 ( file_ptrs* fptrs, long n_fptr_pos )
 /* --- @mode_2@ --- *
  *
  * Arguments:	@file_ptrs *fptrs@ = pointer struct of source and destination file
- * 		@long n_fptr_pos@ = the position of byte from where to be read
+ * 		@off_t n_fptr_pos@ = the position of byte from where to be read
  *
  * Returns:	the number of bytes read, @-1@ otherwise
  *
  * Use:		Reads into the buffer and writes the buffer to destination file.
  */
-long mode_2 ( file_ptrs* fptrs, long n_fptr_pos )
+off_t mode_2 ( file_ptrs* fptrs, off_t n_fptr_pos )
 {
 	int n_mode = 0;
 	sub_header_block	sub_header; /* Sub Header */
-	long (* mode_form [ 3 ] ) ( file_ptrs* fptrs, long n_fptr_pos ) = { &mode_2_form_1, &mode_2_form_2, &mode_0 };
+	off_t (* mode_form [ 3 ] ) ( file_ptrs* fptrs, off_t n_fptr_pos ) = { &mode_2_form_1, &mode_2_form_2, &mode_0 };
 
 	memset ( &sub_header, 0, sizeof ( sub_header_block ) );
 
@@ -242,13 +195,13 @@ long mode_2 ( file_ptrs* fptrs, long n_fptr_pos )
 /* --- @mode_2_form_1_headerless@ --- *
  *
  * Arguments:	@file_ptrs *fptrs@ = pointer struct of source and destination file
- * 		@long n_fptr_pos@ = the position of byte from where to be read
+ * 		@off_t n_fptr_pos@ = the position of byte from where to be read
  *
  * Returns:	the number of bytes read, @-1@ otherwise
  *
  * Use:		Reads into the buffer and writes the buffer to destination file.
  */
-long mode_2_form_1_headerless ( file_ptrs* fptrs, long n_fptr_pos )
+off_t mode_2_form_1_headerless ( file_ptrs* fptrs, off_t n_fptr_pos )
 {
 	/* Image has Sub Header alone */
 	/* Mode 2 (2336): Subheader (8), Data (2048), ECC (280) */
@@ -265,13 +218,13 @@ long mode_2_form_1_headerless ( file_ptrs* fptrs, long n_fptr_pos )
 /* --- @mode_2_form_2_headerless@ --- *
  *
  * Arguments:	@file_ptrs *fptrs@ = pointer struct of source and destination file
- * 		@long n_fptr_pos@ = the position of byte from where to be read
+ * 		@off_t n_fptr_pos@ = the position of byte from where to be read
  *
  * Returns:	the number of bytes read, @-1@ otherwise
  *
  * Use:		Reads into the buffer and writes the buffer to destination file.
  */
-long mode_2_form_2_headerless ( file_ptrs* fptrs, long n_fptr_pos )
+off_t mode_2_form_2_headerless ( file_ptrs* fptrs, off_t n_fptr_pos )
 {
 	/* Image has Sub Header alone */
 	/* Mode 2 (2336): Subheader (8), Data (2324), CRC (4) */
@@ -305,20 +258,17 @@ int bin_2_iso ( file_ptrs* fptrs,  image_struct*  img_struct )
 	int	n_mode = 0;
 
 	unsigned const char synch_pattern [ 12 ] = { 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00 };
-/*	unsigned const char pdi_header [ 16 ] = { 0x54, 0x54, 0x41, 0x46, 0x4D, 0x50, 0x56, 0x4F, 0x42, 0x43, 0x44, 0x49, 0x4D, 0x47, 0x01, 0x00 };
-*/
+
 	sync_header_block	header; /* Sync Header Block */
 
-	long (* mode [ 5 ] ) ( file_ptrs* fptrs, long n_fptr_pos ) = { &mode_0, &mode_1, &mode_2, &mode_2_form_1_headerless, &mode_2_form_2_headerless };
-	
+	off_t (* mode [ 5 ] ) ( file_ptrs* fptrs, off_t n_fptr_pos ) = { &mode_0, &mode_1, &mode_2, &mode_2_form_1_headerless, &mode_2_form_2_headerless };
 
 	if ( NULL== fptrs -> fsource ) return ( n_return_value ); /* The source file pointer is empty */
 	if ( ( n_img_size = get_file_size ( fptrs -> fsource ) ) < 1 ) return ( n_return_value ); /* The image file is empty */
-	/*if ( ( n_img_size = bin_image_size ( fptrs -> fsource ) ) < 1 ) return ( n_return_value );*/  /* The image file is empty */
 
-	for ( n_loop = img_struct -> pregap ; n_loop < n_img_size; ) {
+	for ( n_loop = ( off_t ) img_struct -> pregap; n_loop < n_img_size; ) {
 
-		progress_bar ( ( ( n_loop + 1 ) * 100 ) / n_img_size );
+		progress_bar ( ( int ) ( ( ( n_loop + 1 ) * 100 ) / n_img_size ) );
 
 		/* Initalize for the loop */
 		memset ( &header, 0, sizeof ( sync_header_block ) );
@@ -328,10 +278,9 @@ int bin_2_iso ( file_ptrs* fptrs,  image_struct*  img_struct )
 		
 		fread ( &header, 1, sizeof ( sync_header_block ), fptrs -> fsource );
 
-		/*
-		printf ("Image size :%ld\tLoop No :%ld\n\n", n_img_size, n_loop );		
-		print ( ( void* ) &header, 8 );
-		*/
+		/*printf ("Image size :%ld\n", n_img_size );
+		printf ( "LOOP NO :%d\n", n_loop );
+		print ( ( void* ) &header, 16 );*/
 
 		/* Revert back the file pointer as it has moved the 
 		 * file pointer till the header (read 16 bytes of data) */
@@ -344,6 +293,7 @@ int bin_2_iso ( file_ptrs* fptrs,  image_struct*  img_struct )
 				/* Mode { 0, 1, 2 } */
 				n_loop += ( *( mode [ n_mode ] ) ) ( fptrs, n_loop ); /* Increment to the next block */
 			else printf ( "Weird Mode \n" );
+			if ( 2448 == img_struct -> block ) n_loop += 96;
 		} else if ( ( !memcmp ( &header, ( ( (unsigned char*) (&header) ) + 4 ), 4 ) ) ) {
 
 			/*print ( ( void* ) &header, 8 );*/
@@ -354,9 +304,7 @@ int bin_2_iso ( file_ptrs* fptrs,  image_struct*  img_struct )
 				/* Image has 8 BYTE HEADER with User Data 2324 */
 				n_loop += ( *( mode [ 4 ] ) ) ( fptrs, n_loop ); /* Increment to the next block */
 			}
-		}/* else if ( !memcmp ( &pdi_header, &header, 16 ) ) {
-			n_loop += 304;  Skip the PDI Properatery Header 
-		}*/ else {
+		} else {
 			/* Image does not have any standard header */
 			/*print ( ( void* ) &header, 16 );*/
 			n_loop++; /* Increment to the next location */
@@ -385,34 +333,5 @@ int bin_2_iso ( file_ptrs* fptrs,  image_struct*  img_struct )
 
 int img_2_iso ( file_ptrs* fptrs,  image_struct*  img_struct )
 {
-        off_t    	n_loop = 0;
-        off_t    	n_img_size = 0;
-	unsigned char*	data_buffer = 0;
-        int     	n_return_value = ERROR;
-
-	/*char	data [ 2048 ] ;*/
-
-	if ( ( n_img_size = get_file_size ( fptrs -> fsource ) ) < 1 ) return ( n_return_value ); /* The image file is empty */
-        
-	set_file_pointer ( fptrs -> fsource, img_struct -> pregap );
-	
-	data_buffer = ( unsigned char* ) malloc ( sizeof ( unsigned char ) * ( img_struct -> block ) );
-	if ( NULL != data_buffer ) {
-		memset ( data_buffer, 0, img_struct -> block );
-		for ( n_loop = img_struct -> pregap  ; n_loop <  n_img_size ; n_loop += img_struct -> block ) {
-        	        progress_bar ( ( ( n_loop + 1 ) * 100 ) / n_img_size );
-                	fread ( data_buffer , sizeof ( char ),  img_struct -> block, fptrs -> fsource );	
-			write_2_file ( fptrs -> fdest, ( void* ) data_buffer, img_struct -> block );
-		}
-		free ( data_buffer );
-	}
-
-	set_file_pointer ( fptrs -> fsource, ( off_t ) 0 );
-
-	n_return_value = AOK;
-	progress_bar ( 100 );
-
-	printf ( "\n" );
-	
-	return ( n_return_value );
+	return ( img_2_img ( fptrs, img_struct, img_struct -> block ) );
 }
