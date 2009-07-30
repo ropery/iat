@@ -64,6 +64,7 @@ int is_mode ( file_ptrs* fptrs, image_struct* img_struct )
 			mode = 2;
 			break;
 		case 2352:
+		case 2368:
 		case 2448:
 			set_file_pointer ( fptrs -> fsource, ( off_t ) ( img_struct -> pregap + 12 ) );
 			fread ( &msf_block, sizeof ( msf_mode_block ), 1,  fptrs->fsource );

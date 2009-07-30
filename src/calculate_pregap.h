@@ -87,7 +87,7 @@ off_t calculate_pregap_length ( off_t  cd_id_start, image_struct* img_struct, in
  * 
  * Use:		Return block size image.
  */
-int calculate_block_size ( off_t cd_id_start, off_t cd_id_end, image_struct* img_struct );
+size_t calculate_block_size ( off_t cd_id_start, off_t cd_id_end, image_struct* img_struct );
 
 /* --- @calculate_pregap@ --- *
  *

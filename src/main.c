@@ -106,11 +106,15 @@ int create_toc_or_cue ( iat_parser* iat_option, image_struct* img_struct, file_p
 {
 	int return_value = ERROR;
 	char* file_desc = NULL;
+	char* file_toc_or_cue = NULL;
 	char ext [ 2 ] [ 4 ] = { 0 };
+	char ext_dat_or_bin [ 2 ] [ 4 ] = { 0 };
 
 	if ( ( NULL == iat_option ) || ( NULL == img_struct ) || ( NULL == fptrs ) ) return ( return_value );
-	memset ( ext [ 0 ] , 0, 4 ); memmove ( ext [ 0 ] , "toc", 3 );
-	memset ( ext [ 1 ] , 0, 4 ); memmove ( ext [ 1 ] , "cue", 3 );
+	memset ( ext [ 0 ], 0, 4 ); memmove ( ext [ 0 ], "toc", 3 );
+	memset ( ext [ 1 ], 0, 4 ); memmove ( ext [ 1 ], "cue", 3 );
+	memset ( ext_dat_or_bin [ 0 ], 0, 4 ); memmove ( ext_dat_or_bin [ 0 ], "dat", 3 );
+	memset ( ext_dat_or_bin [ 1 ], 0, 4 ); memmove ( ext_dat_or_bin [ 1 ], "bin", 3 );
 
 	if ( iat_option -> output_given ) file_desc = smart_name ( iat_option -> output_arg, ext [ is_cue ] );
 	else file_desc = smart_name ( iat_option -> input_arg, ext [ is_cue ] );
@@ -123,19 +127,23 @@ int create_toc_or_cue ( iat_parser* iat_option, image_struct* img_struct, file_p
 		return ( return_value );
 	}
 
+	if ( iat_option -> output_given ) file_toc_or_cue = smart_name ( iat_option -> output_arg, ext_dat_or_bin [ is_cue ] );
+	else file_toc_or_cue = smart_name ( iat_option -> input_arg, ext_dat_or_bin [ is_cue ] );
+
 	switch ( is_cue ) {
 		case TOC_FORMAT :
-			create_toc ( fptrs, img_struct, iat_option -> input_arg );
+			create_toc ( fptrs, img_struct, file_toc_or_cue );
 			break;
 		case CUE_FORMAT :
-			create_cue ( fptrs, img_struct, iat_option -> input_arg );
+			create_cue ( fptrs, img_struct, file_toc_or_cue );
 			break;
 		default :
 			break;
 	}
 
-	fclose ( fptrs -> fdesc );
 	free_allocated_memory ( ( void* ) file_desc );
+	free_allocated_memory ( ( void* ) file_toc_or_cue );
+	fclose ( fptrs -> fdesc );
 
 	return ( return_value );
 }
@@ -161,8 +169,8 @@ int create_dat_or_bin ( iat_parser* iat_option, image_struct* img_struct, file_p
 
 	if ( ( NULL == iat_option ) || ( NULL == img_struct ) || ( NULL == fptrs ) ) return ( return_value );
 
-	memset ( ext [ 0 ] , 0, 4 ); memmove ( ext [ 0 ] , "dat", 3 );
-	memset ( ext [ 1 ] , 0, 4 ); memmove ( ext [ 1 ] , "bin", 3 );
+	memset ( ext [ 0 ], 0, 4 ); memmove ( ext [ 0 ], "dat", 3 );
+	memset ( ext [ 1 ], 0, 4 ); memmove ( ext [ 1 ], "bin", 3 );
 
 	printf ( "Image conversion :\n\t%s => ", iat_option -> input_arg );
 

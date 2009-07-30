@@ -171,13 +171,13 @@ off_t mode_2 ( file_ptrs* fptrs, off_t n_fptr_pos )
 	memset ( &sub_header, 0, sizeof ( sub_header_block ) );
 
 	/* Move the file pointer to read the sub-header info */
-	set_file_pointer ( fptrs -> fsource, ( n_fptr_pos += ( long ) sizeof ( sync_header_block ) ) );
+	set_file_pointer ( fptrs -> fsource, ( n_fptr_pos += ( off_t ) sizeof ( sync_header_block ) ) );
 
 	fread ( &sub_header, 1, sizeof ( sub_header_block ), fptrs -> fsource );
 
 	/* Revert back the file pointer as it has moved  
 	 * till the sub-header (read 16 + 8 bytes of data) */
-	set_file_pointer ( fptrs -> fsource, ( n_fptr_pos -= ( long ) sizeof ( sync_header_block ) ) );
+	set_file_pointer ( fptrs -> fsource, ( n_fptr_pos -= ( off_t ) sizeof ( sync_header_block ) ) );
 
 	if ( !memcmp ( sub_header.first_copy, sub_header.second_copy, 4 ) ) {
 		/* Values { 0, 32, etc.. } 32 (5th bit set - Form 2), 0 - (5th bit not set - Form 1)*/
@@ -253,6 +253,7 @@ off_t mode_2_form_2_headerless ( file_ptrs* fptrs, off_t n_fptr_pos )
 int bin_2_iso ( file_ptrs* fptrs,  image_struct*  img_struct )
 {
 	off_t	n_loop = 0;
+	off_t	n_loop_incrementer = 0;
 	off_t	n_img_size = 0;
 	int	n_return_value = ERROR;
 	int	n_mode = 0;
@@ -291,10 +292,16 @@ int bin_2_iso ( file_ptrs* fptrs,  image_struct*  img_struct )
 			n_mode = ( (char) ( *( header.msf_block.mode ) ) );
 			if ( ( n_mode > -1 ) && ( n_mode < 3 ) )
 				/* Mode { 0, 1, 2 } */
-				n_loop += ( *( mode [ n_mode ] ) ) ( fptrs, n_loop ); /* Increment to the next block */
+				n_loop_incrementer = ( *( mode [ n_mode ] ) ) ( fptrs, n_loop ); /* Increment to the next block */
 			else printf ( "Weird Mode \n" );
-			if ( 2448 == img_struct -> block ) n_loop += 96;
-		} else if ( ( !memcmp ( &header, ( ( (unsigned char*) (&header) ) + 4 ), 4 ) ) ) {
+			if ( 0 < n_loop_incrementer ) {
+				if ( ( 2448 == img_struct -> block ) || ( 2368 == img_struct -> block ) ) {
+					n_loop += n_loop_incrementer;
+					n_loop += ( ( off_t ) img_struct -> block - n_loop_incrementer );
+					n_loop_incrementer = 0;
+				} else n_loop += n_loop_incrementer;
+			}
+		} else if ( ( !memcmp ( &header, ( ( (unsigned char*) (&header) ) + 4 ), 4 ) ) && ( 2336 == img_struct -> block ) ) {
 
 			/*print ( ( void* ) &header, 8 );*/
 			if ( !is_svcd_sub_header ( (unsigned char*) &header ) ) {
@@ -308,6 +315,7 @@ int bin_2_iso ( file_ptrs* fptrs,  image_struct*  img_struct )
 			/* Image does not have any standard header */
 			/*print ( ( void* ) &header, 16 );*/
 			n_loop++; /* Increment to the next location */
+			/*n_loop += img_struct -> block;*/ /* Increment to the next block */
 		}
 	}
 

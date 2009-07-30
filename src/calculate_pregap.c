@@ -53,8 +53,8 @@ int is_udf_image  ( unsigned char* header )
                 { 0x42, 0x4F, 0x4F, 0x54, 0x32 }, /* BOOT2 */
                 { 0x43, 0x44, 0x30, 0x30, 0x31 }, /* CD001 */
                 { 0x43, 0x44, 0x57, 0x30, 0x32 }, /* CDW02 */
-                { 0x4E, 0x5D, 0x5C, 0x30, 0x32 }, /* NSR02 */
-                { 0x4E, 0x5D, 0x5C, 0x30, 0x33 }, /* NSR03 */
+		{ 0x4E, 0x53, 0x52, 0x30, 0x32 }, /* NSR02 */
+		{ 0x4E, 0x53, 0x52, 0x30, 0x33 }, /* NSR03 */
                 { 0x54, 0x45, 0x41, 0x30, 0x31 }  /* TEA01 */
         };
 
@@ -95,16 +95,17 @@ off_t calculate_pregap_length ( off_t  cd_id_start, image_struct* img_struct, in
  * 
  * Use:		Return block size image.
  */
-int calculate_block_size (  off_t cd_id_start, off_t cd_id_end, image_struct* img_struct )
+size_t calculate_block_size (  off_t cd_id_start, off_t cd_id_end, image_struct* img_struct )
 {
 
-	int block_sizes [ ] = { 2048, 2336, 2352, 2448 };
+	int block_sizes [ ] = { 2048, 2336, 2352, 2368, 2448 };
 	size_t block  = cd_id_end - cd_id_start;
 
 	img_struct -> block  = ( ( block % block_sizes [ 0 ] ) == 0 ) ? block_sizes [ 0 ] :
 		( ( block % block_sizes [ 1 ] ) == 0 ) ? block_sizes [ 1 ] :
 		( ( block % block_sizes [ 2 ] ) == 0 ) ? block_sizes [ 2 ] :
-		block_sizes [ 3 ];
+		( ( block % block_sizes [ 3 ] ) == 0 ) ? block_sizes [ 3 ] :
+		block_sizes [ 4 ];
 
 	return ( img_struct -> block );	
 }
@@ -123,7 +124,7 @@ off_t calculate_pregap ( file_ptrs* fptrs,  image_struct*  img_struct )
 	unsigned char	buf [ 12 ];
 	off_t		img_size ;
         off_t 		n_loop = 0;
-	off_t		start = 32768; 
+	off_t		start = 32768;
 	off_t		cd_id_start = -1;
 	off_t		cd_id_end = 0;
 	int		header = 0;
@@ -165,16 +166,14 @@ off_t calculate_pregap ( file_ptrs* fptrs,  image_struct*  img_struct )
 			if ( ( header != 8 ) && ( header != 24 ) )
 				header += 8;
 			 
-		} else 
-			if ( !is_udf_image ( ( unsigned char *) buf ) ) {
-				if ( cd_id_start < 0 ) {
-					cd_id_start = n_loop;
-					img_struct -> type +=2;
-				} else {
-					cd_id_end = n_loop;
-					n_loop = img_size;
-				}
-		
+		} else if ( !is_udf_image ( ( unsigned char *) buf ) ) {
+			if ( cd_id_start < 0 ) {
+				cd_id_start = n_loop;
+				img_struct -> type +=2;
+			} else {
+				cd_id_end = n_loop;
+				n_loop = img_size;
+			}
 		} else if ( !memcmp ( XA_ID, buf, 8 ) ) { 
 			if ( img_struct -> type <= 7 )
 				img_struct -> type += 7;
