@@ -43,6 +43,28 @@
 #include "debug.h"
 #endif
 
+/* --- @print@ --- *
+ *
+ * Temporary function, will be removed in the release
+ */
+void print_tmp ( unsigned char* ptr, int n_len )
+{
+	int n_loop = 0;
+	if ( n_len > 16 ) {
+		printf ("Data :");
+		for ( n_loop = 0; n_loop < n_len; n_loop++ ) {
+			printf ("%X", (unsigned char) *( ptr + n_loop ) );
+		}
+		printf ("\n\n");
+	} else if ( n_len > 0 ) {
+		printf ("2 BYTE :");
+		for ( n_loop = 0; n_loop < n_len; n_loop++ ) {
+			printf ("|%2X|", (unsigned char) *( ptr + n_loop ) );
+		}
+		printf ("\n\n");
+	}
+}
+
 /* --- @print_udf@ --- *
  *
  * Temporary function, will be removed in the release
@@ -143,7 +165,6 @@ void display_pvd_info ( iso_primary_descriptor* pvd )
 {
 	/* PVD IS ON  LBA 16 */ 
 	/* ECMA 119 - 8.4 Primary Volume Descriptor*/
-	int nvalue = 0;
 	printf ( "TYPE\t	: (%d)\n", ( *( pvd -> type ) ) );
 	printf ( "ID\t	: " ); print_signed_char ( ( pvd -> id ), 5 ); printf ( "\n" );
 	printf ( "VERSION\t	: (%d)\n", ( *( pvd -> version ) ) );
@@ -171,6 +192,52 @@ void display_pvd_info ( iso_primary_descriptor* pvd )
 	printf ( "DATA\t	: " ); print_signed_char ( ( pvd -> effective_date_and_time ), 17 ); printf ( "\n" );
 	printf ( "FILE VERSION\t: %d\n",  ( *( pvd -> file_structure_version ) ) ); 
 	printf ( "APPLICATION USE\t: " ); print_signed_char ( ( pvd -> application_use ), 512 ); printf ( "\n" ); 
+}
+
+/* --- @display_udf_pvd_info@ --- *
+ *
+ * Arguments:   @iso_primary_descriptor* pvd@ = primary volume descriptor
+ * 		@udf_primary_volume_descriptor* udf_pvd@ = primary volume descriptor
+ *
+ * Returns:     ---
+
+ * Use:         Displays the primary volume description of UDF.
+ */
+void display_udf_pvd_info ( iso_primary_descriptor* pvd, udf_primary_volume_descriptor* udf_pvd )
+{
+	/* PVD Location is calculated based on the AVDP @ LBA 256 */
+	/* ECMA 167r3 3/10.1 Primary Volume Descriptor*/
+	if ( !( pvd ) || !( udf_pvd) ) return;
+	printf ( "TYPE\t\t\t	: (%d)\n", ( *( pvd -> type ) ) );
+	printf ( "ID\t\t\t	: " ); print_signed_char ( ( pvd -> id ), 5 ); printf ( "\n" );
+	printf ( "VERSION\t\t\t	: (%d)\n", ( *( pvd -> version ) ) );
+	/*printf ( "VERSION\t\t\t	: (%d)\n", ( udf_pvd -> desc_tag . tag_desc_version ) );*/
+	printf ( "VOLUME ID\t\t\t:  " ); print_udf ( ( udf_pvd -> volume_id ), 32 ); printf ( "\n" );
+	printf ( "VOLUME NUMBER\t\t\t: %d\n", udf_pvd -> volume_sequence_number );
+	printf ( "VOLUME SET ID\t\t\t:  " ); print_udf ( ( udf_pvd -> volume_set_id ), 32 ); printf ( "\n" ); /* size is 128 */
+	printf ( "VOLUME DESC SEQ NUMBER\t\t: %d\n", udf_pvd -> volume_description_sequence_number );
+	printf ( "MAX VOLUME SEQ NUMBER\t\t: %d\n", udf_pvd -> max_volume_sequence_number );
+	printf ( "PRIMARY VOLUME DESC NUMBER\t: %d\n", udf_pvd -> primary_volume_description_number );
+	printf ( "INTERCHANGE LEVEL\t\t: %d\n", udf_pvd -> interchange_levle );
+	printf ( "MAX INTERCHANGE LEVEL\t\t: %d\n", udf_pvd -> max_interchange_levle );
+
+	printf ( "DESC CHAR SET\t\t\t: " ); print_udf ( ( udf_pvd -> desc_char_set . char_set_info ), 63 );  printf ( "\n" );
+	printf ( "EXPLANATORY CHAR SET\t\t: " ); print_udf ( ( udf_pvd -> explanatory_char_set . char_set_info ), 63 );  printf ( "\n" );
+
+	printf ( "APPLICATION\t\t\t: " );
+	print_udf ( ( udf_pvd -> application_id . ident ), 23 );
+	print_udf ( ( udf_pvd -> application_id . ident_suffix ), 8 );
+	/*print_udf ( ( udf_pvd -> imp_id . ident ), 23 );
+	print_udf ( ( udf_pvd -> imp_id . ident_suffix ), 8 );*/
+	printf ( "\n" );
+	printf ( "COPYRIGHT\t\t\t: %d", udf_pvd -> vol_copyright . len ); printf ( "\n" );
+	printf ( "ABSTRACT\t\t\t: %d",  udf_pvd -> vol_abstract . len ); printf ( "\n" );
+
+	printf ( "CREATED\t\t\t	: %4d%02d%02d%02d%02d%02d", udf_pvd -> creation_date_and_time . year, udf_pvd -> creation_date_and_time . month,
+			udf_pvd -> creation_date_and_time . day, udf_pvd -> creation_date_and_time . hour, udf_pvd -> creation_date_and_time . minute,
+			udf_pvd -> creation_date_and_time . second ); printf ( "\n" );
+
+	printf ( "APPLICATION USE\t\t\t: " ); print_udf ( ( udf_pvd -> application_use ), 64 ); printf ( "\n" );
 }
 
 /* --- @is_same_previous_content@ --- *
@@ -279,6 +346,7 @@ int display_mode_info ( unsigned char* buffer, image_struct*  img_struct, sub_mo
 
 			n_return_value = AOK; break;
 		case 2352:
+		case 2368:
 		case 2448:	 
 			memset ( &msf_block, 0, sizeof ( msf_block ) ); 
 			if ( !memcmp ( buffer, HEADER_ID, 12 ) ) {
@@ -342,6 +410,58 @@ int display_mode_info ( unsigned char* buffer, image_struct*  img_struct, sub_mo
 	return ( n_return_value );
 }
 
+/* --- @get_udf_pvd_block@ --- *
+ *
+ * Arguments:   @file_ptrs* fptrs@ = pointer struct of source and destination file
+ * 		@unsigned const char* header@ = the sync header
+ *              @image_struct* img_struct@ = pointer struct of type image and pregap of image
+ *
+ * Returns:     UDF PVD Block on success, @NULL@ otherwise.
+ *
+ * Use:         Returns the UDF PVD Block on detection.
+ */
+unsigned char* get_udf_pvd_block ( file_ptrs* fptrs, unsigned const char* header, image_struct* img_struct )
+{
+	unsigned char*			buffer = NULL;
+	udf_anchor_volume_descriptor	udf_avd;
+	int				pvd_info;
+
+	if ( ( !fptrs ) || ( !header ) || ( !img_struct ) ) return ( NULL );
+
+	buffer = ( unsigned char* ) malloc ( sizeof ( unsigned char ) * img_struct -> block );
+	memset ( &udf_avd, 0, sizeof ( udf_anchor_volume_descriptor ) );
+
+	/* Read Anchor Volume Descriptor Pointer available at 256th block */
+	set_file_pointer ( fptrs -> fsource, ( off_t ) ( ( img_struct -> block * 256 ) + ( img_struct -> pregap ) ) );
+	fread ( buffer, 1, img_struct -> block, fptrs -> fsource );
+
+	if ( !memcmp ( buffer, header, 12 ) ) {
+		/* 2448, 2352 Block */
+		if ( !memcmp ( buffer + 16, buffer + 20, 4 ) ) pvd_info = 24;
+		else pvd_info = 16;
+	} else if ( !memcmp ( buffer, buffer + 4, 4 ) ) pvd_info = 8; /* 2336 Block */
+	else pvd_info = 0; /* 2048 Block */
+	memmove ( &udf_avd, buffer + pvd_info, sizeof ( udf_anchor_volume_descriptor ) );
+
+	/* Check for AVDP Block */
+	if ( TAG_IDENT_AVDP == udf_avd.desc_tag.tag_id ) {
+		/**
+		 * Set the file pointer to the Main PVD Location available
+		 * from Anchor Volume Descriptor Pointer available at the 256th block
+		 * and Read the Main PVD Block
+		 */
+		set_file_pointer ( fptrs -> fsource,
+				( off_t ) ( ( img_struct -> block * ( udf_avd.main_vol_desc_seq_ext.loc ) ) + ( img_struct -> pregap ) ) );
+		fread ( buffer, 1, img_struct -> block, fptrs -> fsource );
+	} else {
+		printf ( "\n AVDP Block not found at Location 256: %d\n", ( off_t ) ( ( img_struct -> block * 256 ) + ( img_struct -> pregap ) ) );
+		free_allocated_memory ( ( void* ) buffer );
+		buffer = NULL;
+	}
+
+	return ( buffer );
+}
+
 /* --- @debug@ --- *
  *
  * Arguments:   @file_ptrs *fptrs@ = pointer struct of source and destination file
@@ -351,21 +471,24 @@ int display_mode_info ( unsigned char* buffer, image_struct*  img_struct, sub_mo
 
  * Use:         Return the detection of the image.
  */
-int debug ( file_ptrs* fptrs,  image_struct*  img_struct )
+int debug ( file_ptrs* fptrs, image_struct* img_struct )
 {
-	off_t   		n_loop = 0;
-        off_t   		img_size = 0;
-	off_t			block_number = 0;
-	int			pvd_info = 0;
-	iso_primary_descriptor	pvd;	 /* Volume Descriptor */
-	/*iso_vd_primary		pvd;*/
-	sub_mode_info		previous;
-	unsigned char*	buffer = NULL;
+	off_t   			n_loop = 0;
+        off_t   			img_size = 0;
+	off_t				block_number = 0;
+	int				pvd_info = 0;
+	iso_primary_descriptor		pvd;	 /* Volume Descriptor */
+	udf_primary_volume_descriptor	udf_pvd; /* UDF Volume Descriptor */
+
+	unsigned char*			buffer = NULL;
+	unsigned char*			data_buffer = NULL;
+	int				udf_flag = 0;
+	sub_mode_info			previous;
 	
 	/* SYNCH HEADER */
         unsigned const char HEADER_ID [ 12 ] = { 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00 };
 
-	if ( ( !fptrs ) || ( !img_struct ) )return ( -1 );
+	if ( ( !fptrs ) || ( !img_struct ) ) return ( -1 );
 
 	n_loop = img_struct -> pregap;
 	buffer = ( unsigned char* ) malloc ( sizeof ( unsigned char ) * img_struct -> block );
@@ -379,7 +502,6 @@ int debug ( file_ptrs* fptrs,  image_struct*  img_struct )
 		printf ( "Pregap\t: (%ld)\n", img_struct->pregap );	
 		printf ( "Block\t: (%d)\n", img_struct->block );
 		printf ( "Size\t: (%lld) bytes\n", img_size );
-
 
 		while ( n_loop < img_size ) {
 
@@ -396,10 +518,39 @@ int debug ( file_ptrs* fptrs,  image_struct*  img_struct )
 					else pvd_info = 16;
 				} else if ( !memcmp ( buffer, buffer + 4, 4 ) ) pvd_info = 8; /* 2336 Block */
 				else pvd_info = 0; /* 2048 Block */
-				
-				memmove ( &pvd, buffer + pvd_info, sizeof ( iso_primary_descriptor ) );
-				display_pvd_info ( &pvd );
-				printf ( "\n" );
+
+				if ( !memcmp ( buffer + pvd_info + 1, "BEA01", 5 ) ) {
+
+					/* If the image is an UDF image */
+					memset ( &udf_pvd, 0, sizeof ( udf_primary_volume_descriptor ) );
+					memmove ( &pvd, buffer + pvd_info, sizeof ( iso_primary_descriptor ) );
+
+					if ( NULL != ( data_buffer = get_udf_pvd_block ( fptrs, HEADER_ID, img_struct ) ) ) {
+
+						/* Recalculate the header part again */
+						if ( !memcmp ( data_buffer, HEADER_ID, 12 ) ) {
+							/* 2448, 2352 Block */
+							if ( !memcmp ( data_buffer + 16, data_buffer + 20, 4 ) ) pvd_info = 24;
+							else pvd_info = 16;
+						} else if ( !memcmp ( data_buffer, data_buffer + 4, 4 ) ) pvd_info = 8; /* 2336 Block */
+						else pvd_info = 0; /* 2048 Block */
+
+						/* Display the Primary Volume Descriptor for UDF image */
+						memmove ( &udf_pvd, data_buffer + pvd_info, sizeof ( udf_primary_volume_descriptor ) );
+						display_udf_pvd_info ( &pvd, &udf_pvd );
+
+						free_allocated_memory ( ( void* ) data_buffer );
+					}
+
+					/* Revert back the file pointer to the current location */
+					set_file_pointer ( fptrs -> fsource, ( off_t ) ( ( img_struct -> block * 16 ) + ( img_struct -> pregap ) ) );
+					fread ( buffer, 1, img_struct -> block, fptrs -> fsource );
+				} else {
+					/* Display the Primary Volume Descriptor for ISO image */
+					memmove ( &pvd, buffer + pvd_info, sizeof ( iso_primary_descriptor ) );
+					display_pvd_info ( &pvd );
+					printf ( "\n" );
+				}
 			}
 
 			display_mode_info ( buffer, img_struct, &previous, block_number, n_loop );
@@ -408,7 +559,7 @@ int debug ( file_ptrs* fptrs,  image_struct*  img_struct )
 			block_number++;
 		}
 
-		free ( buffer );
+		free_allocated_memory ( ( void* ) buffer );
 	}
 
 	return ( 0 );

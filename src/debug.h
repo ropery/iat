@@ -66,6 +66,10 @@ extern "C" {
 #include "ecma119.h"
 #endif
 
+#ifndef ECMA167_H
+#include "ecma167.h"
+#endif
+
 typedef struct sub_mode_info {
 	int mode;
 	int file_number;
@@ -81,7 +85,6 @@ typedef struct sub_mode_info {
 	int eor;
 } sub_mode_info;
 
-
 /* --- @display_pvd_info@ --- *
  *
  * Arguments:   @iso_primary_descriptor* pvd@ = primary volume descriptor
@@ -91,6 +94,17 @@ typedef struct sub_mode_info {
  * Use:         Displays the primary volume description.
  */
 void display_pvd_info ( iso_primary_descriptor* pvd );
+
+/* --- @display_udf_pvd_info@ --- *
+ *
+ * Arguments:   @iso_primary_descriptor* pvd@ = primary volume descriptor
+ * 		@udf_primary_volume_descriptor* udf_pvd@ = primary volume descriptor
+ *
+ * Returns:     ---
+
+ * Use:         Displays the primary volume description of UDF.
+ */
+void display_udf_pvd_info ( iso_primary_descriptor* pvd, udf_primary_volume_descriptor* udf_pvd );
 
 /* --- @is_same_previous_content@ --- *
  *
@@ -126,6 +140,18 @@ void display_sub_mode ( sub_mode_info* current );
  * Use:         Displays the mode information.
  */
 int display_mode_info ( unsigned char* buffer, image_struct*  img_struct, sub_mode_info* previous, off_t block_number, off_t n_loop );
+
+/* --- @get_udf_pvd_block@ --- *
+ *
+ * Arguments:   @file_ptrs* fptrs@ = pointer struct of source and destination file
+ * 		@unsigned const char* header@ = the sync header
+ *              @image_struct* img_struct@ = pointer struct of type image and pregap of image
+ *
+ * Returns:     UDF PVD Block on success, @NULL@ otherwise.
+ *
+ * Use:         Returns the UDF PVD Block on detection.
+ */
+unsigned char* get_udf_pvd_block ( file_ptrs* fptrs, unsigned const char* header, image_struct* img_struct );
 
 /* --- @image_debug@ --- *
  *
