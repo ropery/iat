@@ -16,7 +16,7 @@ option	"input"		i "A string option for a filename"
 	string typestr="image input"	optional							
 option	"output"	o "A string option for a filename"
 	string typestr="image output"	optional dependon="input"
-option  "verbose"	v "verbose mode" optional
+#option  "verbose"	v "verbose mode" optional
 option "debug"		- "debug image"	optional
 
 defgroup "conversation" groupdesc="Convert your image in :"
