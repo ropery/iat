@@ -72,6 +72,7 @@ void print_toc_mode ( file_ptrs* fptrs, struct_toc* toc, image_struct* img_struc
 {
 	switch ( ( img_struct-> block ) ) {
 		case 2048:
+		case 2368:
 			fprintf ( fptrs->fdesc, "\n" );
 			break;
 		case 2336:

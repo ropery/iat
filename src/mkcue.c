@@ -104,7 +104,8 @@ void create_first_track ( file_ptrs* fptrs, image_struct* img_struct, char *file
 	
 	msf_mode_block msf_block;
 
-	if ( img_struct-> block == 2448 ) img_struct->block = 2352;
+	if ( img_struct -> block == 2448 ) img_struct -> block = 2352;
+	if ( img_struct -> block == 2368 ) img_struct -> block = 2048;
 	
 	/* inizialization first track */
 	cue->mode = is_mode ( fptrs, img_struct );
