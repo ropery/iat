@@ -102,7 +102,7 @@
 * Use:		Creates toc (or) cue from the cd image.
 *
 */
-int create_toc_or_cue ( iat_parser* iat_option, image_struct* img_struct, file_ptrs* fptrs, int is_cue )
+int create_toc_or_cue ( iat_parser* iat_option, image_struct* img_struct, file_ptrs* fptrs, int is_cue , int name_change_is )
 {
 	int return_value = ERROR;
 	char* file_desc = NULL;
@@ -127,8 +127,14 @@ int create_toc_or_cue ( iat_parser* iat_option, image_struct* img_struct, file_p
 		return ( return_value );
 	}
 
-	if ( iat_option -> output_given ) file_toc_or_cue = smart_name ( iat_option -> output_arg, ext_dat_or_bin [ is_cue ] );
-	else file_toc_or_cue = smart_name ( iat_option -> input_arg, ext_dat_or_bin [ is_cue ] );
+	if ( name_change_is == 1 ) {
+		if ( iat_option -> output_given ) file_toc_or_cue = smart_name ( iat_option -> output_arg, ext_dat_or_bin [ is_cue ] );
+		else file_toc_or_cue = smart_name ( iat_option -> input_arg, ext_dat_or_bin [ is_cue ] );
+	}
+	else {
+		if ( iat_option -> output_given ) file_toc_or_cue = copy_string ( iat_option -> output_arg );
+		else file_toc_or_cue = copy_string ( iat_option -> input_arg );
+	}
 
 	switch ( is_cue ) {
 		case TOC_FORMAT :
@@ -188,14 +194,20 @@ int create_dat_or_bin ( iat_parser* iat_option, image_struct* img_struct, file_p
 	switch ( is_bin ) {
 		case DAT_FORMAT :
 			block = img_struct -> block;
+			if ( img_struct -> block == 2368 ) block = 2048;
 			break;
 		case BIN_FORMAT :
-			block = ( 2448 == img_struct -> block ) ? 2352 : img_struct -> block;
+			block = img_struct -> block;
+			if ( img_struct -> block == 2368 ) block = 2048;
+			if ( img_struct -> block == 2448 ) block = 2352;
+
 			break;
 		default :
 			block = 0;
 			break;
 	}
+
+	printf (" BLOCK : (%d)\n", block );
 
 	if ( AOK != ( img_2_img ( fptrs, img_struct, block ) ) ) {
 		printf ("\nERROR");
@@ -203,6 +215,7 @@ int create_dat_or_bin ( iat_parser* iat_option, image_struct* img_struct, file_p
 		return ( return_value );
 	}
 	else return_value = AOK;
+
 
 	fclose ( fptrs -> fdest );
 	free_allocated_memory ( ( void* ) file_output );
@@ -310,6 +323,7 @@ int choose_conversion ( iat_parser* iat_option )
 int main ( int argc, char* argv [ ] )
 {
 	iat_parser iat_option;
+	int name_change_is = 0;
 	image_struct img_struct = { 0 };
 	file_ptrs fptrs = { 0 };
 
@@ -359,26 +373,38 @@ int main ( int argc, char* argv [ ] )
 				return_value = AOK;
 				break;
 		case TOC_MODE :
-				if ( img_struct.pregap > 0  ) {
+				if ( img_struct.block == 2368 ) 
+					printf ( "\nWarning: YOUR IMAGE of %d  will be TRANSFORMED to 2048\n", img_struct.block );
+
+				
+
+				if ( ( img_struct.pregap > 0 ) || ( img_struct.block == 2368 ) ) {
 					n_value = ( ERROR == create_dat_or_bin ( &iat_option, &img_struct, &fptrs, DAT_FORMAT ) ) ? ERROR : AOK;
+		
+					name_change_is = 1;
 					return_value = n_value;
 				}
 
 				if ( AOK == n_value )
-					return_value = create_toc_or_cue ( &iat_option, &img_struct, &fptrs, TOC_FORMAT );
+					return_value = create_toc_or_cue ( &iat_option, &img_struct, &fptrs, TOC_FORMAT, name_change_is );
 				break;
 		case CUE_MODE :
-				if ( img_struct.block >= 2448 ) {
-					printf ( "\nWarning: YOUR IMAGE of 2448 will be TRANSFORMED to 2352\n" );
+				if ( ( img_struct.block >= 2448 ) || ( img_struct.block == 2368 ) ) {
+					printf ( "\nWarning: YOUR IMAGE of %d  will be TRANSFORMED to ", img_struct.block );
+					
+					if ( img_struct.block == 2368 ) printf ("2048");
+						else printf ("2352");
+					printf ("\n");
 				}
 
-				if ( ( img_struct.pregap > 0 ) || ( img_struct.block >= 2448 ) ) {
+				if ( ( img_struct.pregap > 0 ) || ( img_struct.block >= 2448 ) || ( img_struct.block == 2368 ) ) {
 					n_value = ( ERROR == create_dat_or_bin ( &iat_option, &img_struct, &fptrs, BIN_FORMAT ) ) ? ERROR : AOK;
+					name_change_is = 1;
 					return_value = n_value;
 				}
 
 				if ( AOK == n_value )
-					return_value = create_toc_or_cue ( &iat_option, &img_struct, &fptrs, CUE_FORMAT );
+					return_value = create_toc_or_cue ( &iat_option, &img_struct, &fptrs, CUE_FORMAT, name_change_is );
 				break;
 		case ISO_MODE :
 				return_value = iso_conversion ( &iat_option, &img_struct, &fptrs );
