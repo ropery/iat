@@ -128,11 +128,11 @@ int create_toc_or_cue ( iat_parser* iat_option, image_struct* img_struct, file_p
 	}
 
 	if ( name_change_is == 1 ) {
-		if ( iat_option -> output_given ) file_toc_or_cue = smart_name ( iat_option -> output_arg, ext_dat_or_bin [ is_cue ] );
+		if ( iat_option -> output_given ) file_toc_or_cue = copy_string ( iat_option -> output_arg );
 		else file_toc_or_cue = smart_name ( iat_option -> input_arg, ext_dat_or_bin [ is_cue ] );
 	}
 	else file_toc_or_cue = copy_string ( iat_option -> input_arg );
-	
+      
 
 	switch ( is_cue ) {
 		case TOC_FORMAT :
@@ -371,14 +371,22 @@ int main ( int argc, char* argv [ ] )
 				return_value = AOK;
 				break;
 		case TOC_MODE :
-				if ( img_struct.block == 2368 ) 
+				if ( img_struct.block == 2368 ) {
 					printf ( "\nWarning: YOUR IMAGE of %d  will be TRANSFORMED to 2048\n", img_struct.block );
+					
+					name_change_is = 1;						
 
-				
-
-				if ( ( img_struct.pregap > 0 ) || ( img_struct.block == 2368 ) ) {
-					n_value = ( ERROR == create_dat_or_bin ( &iat_option, &img_struct, &fptrs, DAT_FORMAT ) ) ? ERROR : AOK;
+					if ( ! ( iat_option.output_given ) ) {
+						
+						iat_option.input_arg  =  smart_name ( iat_option.input_arg, "dat" );
+						iat_option.output_given = 1;
+					}
 		
+					return_value = iso_conversion ( &iat_option, &img_struct, &fptrs );
+					
+				}	
+				else if ( img_struct.pregap > 0 ) {
+					n_value = ( ERROR == create_dat_or_bin ( &iat_option, &img_struct, &fptrs, DAT_FORMAT ) ) ? ERROR : AOK;
 					name_change_is = 1;
 					return_value = n_value;
 				}
@@ -395,7 +403,18 @@ int main ( int argc, char* argv [ ] )
 					printf ("\n");
 				}
 
-				if ( ( img_struct.pregap > 0 ) || ( img_struct.block >= 2448 ) || ( img_struct.block == 2368 ) ) {
+				if ( img_struct.block == 2368 ) {
+
+					name_change_is = 1;
+
+					if ( ! ( iat_option.output_given ) ) {
+						iat_option.output_arg  =  smart_name ( iat_option.input_arg, "bin" );
+						iat_option.output_given = 1;
+					}
+					
+					return_value = iso_conversion ( &iat_option, &img_struct, &fptrs );
+				}
+				else if ( ( img_struct.pregap > 0 ) || ( img_struct.block >= 2448 )  ) {
 					n_value = ( ERROR == create_dat_or_bin ( &iat_option, &img_struct, &fptrs, BIN_FORMAT ) ) ? ERROR : AOK;
 					name_change_is = 1;
 					return_value = n_value;
