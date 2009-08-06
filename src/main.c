@@ -131,10 +131,8 @@ int create_toc_or_cue ( iat_parser* iat_option, image_struct* img_struct, file_p
 		if ( iat_option -> output_given ) file_toc_or_cue = smart_name ( iat_option -> output_arg, ext_dat_or_bin [ is_cue ] );
 		else file_toc_or_cue = smart_name ( iat_option -> input_arg, ext_dat_or_bin [ is_cue ] );
 	}
-	else {
-		if ( iat_option -> output_given ) file_toc_or_cue = copy_string ( iat_option -> output_arg );
-		else file_toc_or_cue = copy_string ( iat_option -> input_arg );
-	}
+	else file_toc_or_cue = copy_string ( iat_option -> input_arg );
+	
 
 	switch ( is_cue ) {
 		case TOC_FORMAT :
