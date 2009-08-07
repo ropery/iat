@@ -18,7 +18,8 @@ include_HEADERS = util.h \
 		ecma119.h \
 		mkcue.h \
 		mktoc.h	\
-		mkcore.h
+		mkcore.h \
+		ecma167.h
 
 AM_CFLAGS = -D_FILE_OFFSET_BITS=64 -pedantic -Wconversion -Wpointer-arith -Wcast-align #-std=c99 
 
