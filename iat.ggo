@@ -12,7 +12,10 @@ purpose "iat is a tool for detecting the structure of many types of image file."
 
 args "--no-handle-help --no-handle-version --no-handle-error --string-parser"
 
-section "Main options"
+usage " -i [option]"
+
+
+section "OPTIONS"
 
 option	"input"		i "A string option for a filename"
 	string typestr="image input"	optional							
