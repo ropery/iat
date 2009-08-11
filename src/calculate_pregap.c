@@ -184,15 +184,19 @@ off_t calculate_pregap ( file_ptrs* fptrs,  image_struct*  img_struct )
 	progress_bar ( 100 );
 	
 	printf ("\n");
-	
-	/* Detect Block of image */	
-	img_struct -> block  = calculate_block_size ( cd_id_start, cd_id_end, img_struct );
-	
-	/* Detect Header bytes */
-	img_struct -> pregap = calculate_pregap_length ( cd_id_start, img_struct , header );
 
-	img_struct -> type = ( ( 2048 == img_struct -> block ) && ( 0 == img_struct -> pregap ) ) ? IMG_ISO : img_struct -> type;
+	if ( img_struct -> type == 0 ) {
+		img_struct -> type = IMG_UNKOWN;
+		printf ("NO INFO FOUND\n");
+	} else {	
+		/* Detect Block of image */	
+		img_struct -> block  = calculate_block_size ( cd_id_start, cd_id_end, img_struct );
+	
+		/* Detect Header bytes */
+		img_struct -> pregap = calculate_pregap_length ( cd_id_start, img_struct , header );
 
+		img_struct -> type = ( ( 2048 == img_struct -> block ) && ( 0 == img_struct -> pregap ) ) ? IMG_ISO : img_struct -> type;
+	}
 	return ( 0 );	
 }
 
