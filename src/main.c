@@ -332,6 +332,8 @@ int main ( int argc, char* argv [ ] )
 
 	if ( ( cmdline_parser ( argc, argv, &iat_option ) != 0 ) || ( argc <= 1 ) ) {
 		fprintf( stderr,"Run %s --help to see the list of options.\n", argv [ 0 ] );
+		cmdline_parser_free (&iat_option);
+
 		exit ( ERROR );
 	}
 
@@ -350,6 +352,8 @@ int main ( int argc, char* argv [ ] )
 		if ( ( fptrs.fsource = fopen ( file_input, "rb" ) ) == NULL ) {
 			fprintf ( stderr, "%s: %s\n", iat_option.input_arg, strerror ( errno ) );
 			free_allocated_memory ( ( void* ) file_input );
+			cmdline_parser_free (&iat_option);
+
 			exit ( ERROR );
 		}
 
@@ -358,82 +362,89 @@ int main ( int argc, char* argv [ ] )
 		calculate_pregap ( &fptrs, &img_struct );
 	} else {
 		fprintf ( stderr, "Run %s --help to see the list of options.\n", argv [ 0 ] );
+		cmdline_parser_free (&iat_option);
+
 		exit ( ERROR );
 	}
+	
 
-	switch ( choose_conversion ( &iat_option ) ) {
-		case HLP_MODE :
-				cmdline_parser_print_help();
-				return_value = AOK;
-				break;
-		case DBG_MODE :
-				debug ( &fptrs, &img_struct );
-				return_value = AOK;
-				break;
-		case TOC_MODE :
-				if ( img_struct.block == 2368 ) {
-					printf ( "\nWarning: YOUR IMAGE of %d  will be TRANSFORMED to 2048\n", img_struct.block );
+	if ( img_struct.type != IMG_UNKOWN ) {
+	
+		switch ( choose_conversion ( &iat_option ) ) {
+			case HLP_MODE :
+					cmdline_parser_print_help();
+					return_value = AOK;
+					break;
+			case DBG_MODE :
+					debug ( &fptrs, &img_struct );
+					return_value = AOK;
+					break;
+			case TOC_MODE :
+					if ( img_struct.block == 2368 ) {
+						printf ( "\nWarning: YOUR IMAGE of %d  will be TRANSFORMED to 2048\n", img_struct.block );
 					
-					name_change_is = 1;						
+						name_change_is = 1;						
 
-					if ( ! ( iat_option.output_given ) ) {
+						if ( ! ( iat_option.output_given ) ) {
 						
-						iat_option.input_arg  =  smart_name ( iat_option.input_arg, "dat" );
-						iat_option.output_given = 1;
-					}
+							iat_option.input_arg  =  smart_name ( iat_option.input_arg, "dat" );
+							iat_option.output_given = 1;
+						}
 		
-					return_value = iso_conversion ( &iat_option, &img_struct, &fptrs );
+						return_value = iso_conversion ( &iat_option, &img_struct, &fptrs );
 					
-				}	
-				else if ( img_struct.pregap > 0 ) {
-					n_value = ( ERROR == create_dat_or_bin ( &iat_option, &img_struct, &fptrs, DAT_FORMAT ) ) ? ERROR : AOK;
-					name_change_is = 1;
-					return_value = n_value;
-				}
-
-				if ( AOK == n_value )
-					return_value = create_toc_or_cue ( &iat_option, &img_struct, &fptrs, TOC_FORMAT, name_change_is );
-				break;
-		case CUE_MODE :
-				if ( ( img_struct.block >= 2448 ) || ( img_struct.block == 2368 ) ) {
-					printf ( "\nWarning: YOUR IMAGE of %d  will be TRANSFORMED to ", img_struct.block );
-					
-					if ( img_struct.block == 2368 ) printf ("2048");
-						else printf ("2352");
-					printf ("\n");
-				}
-
-				if ( img_struct.block == 2368 ) {
-
-					name_change_is = 1;
-
-					if ( ! ( iat_option.output_given ) ) {
-						iat_option.output_arg  =  smart_name ( iat_option.input_arg, "bin" );
-						iat_option.output_given = 1;
+					}	
+					else if ( img_struct.pregap > 0 ) {
+						n_value = ( ERROR == create_dat_or_bin ( &iat_option, &img_struct, &fptrs, DAT_FORMAT ) ) ? ERROR : AOK;
+						name_change_is = 1;
+						return_value = n_value;
 					}
-					
-					return_value = iso_conversion ( &iat_option, &img_struct, &fptrs );
-				}
-				else if ( ( img_struct.pregap > 0 ) || ( img_struct.block >= 2448 )  ) {
-					n_value = ( ERROR == create_dat_or_bin ( &iat_option, &img_struct, &fptrs, BIN_FORMAT ) ) ? ERROR : AOK;
-					name_change_is = 1;
-					return_value = n_value;
-				}
 
-				if ( AOK == n_value )
-					return_value = create_toc_or_cue ( &iat_option, &img_struct, &fptrs, CUE_FORMAT, name_change_is );
-				break;
-		case ISO_MODE :
-				return_value = iso_conversion ( &iat_option, &img_struct, &fptrs );
-				break;
-		default :
-				cmdline_parser_print_help();
-				return_value = AOK;
-				break;
-	}
+					if ( AOK == n_value )
+						return_value = create_toc_or_cue ( &iat_option, &img_struct, &fptrs, TOC_FORMAT, name_change_is );
+					break;
+			case CUE_MODE :
+					if ( ( img_struct.block == 2448 ) || ( img_struct.block == 2368 ) ) {
+						printf ( "\nWarning: YOUR IMAGE of %d  will be TRANSFORMED to ", img_struct.block );
+					
+						if ( img_struct.block == 2368 ) printf ("2048");
+						else printf ("2352");
+						printf ("\n");
+					}
+
+					if ( img_struct.block == 2368 ) {
+
+						name_change_is = 1;
+
+						if ( ! ( iat_option.output_given ) ) {
+							iat_option.output_arg  =  smart_name ( iat_option.input_arg, "bin" );
+							iat_option.output_given = 1;
+						}
+					
+						return_value = iso_conversion ( &iat_option, &img_struct, &fptrs );
+					}
+					else if ( ( img_struct.pregap > 0 ) || ( img_struct.block >= 2448 )  ) {
+						n_value = ( ERROR == create_dat_or_bin ( &iat_option, &img_struct, &fptrs, BIN_FORMAT ) ) ? ERROR : AOK;
+						name_change_is = 1;
+						return_value = n_value;
+					}
+
+					if ( AOK == n_value )
+						return_value = create_toc_or_cue ( &iat_option, &img_struct, &fptrs, CUE_FORMAT, name_change_is );
+					break;
+			case ISO_MODE :
+					return_value = iso_conversion ( &iat_option, &img_struct, &fptrs );
+					break;
+			default :
+					cmdline_parser_print_help();
+					return_value = AOK;
+					break;
+		}
+	};
 
 	if ( fptrs.fsource ) fclose ( fptrs.fsource );
 	free_allocated_memory ( ( void* ) file_input );
+	cmdline_parser_free (&iat_option);
 
 	return ( AOK );
 }
