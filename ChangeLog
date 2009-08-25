@@ -1,12 +1,13 @@
-v0.2.git xx/xx/2009
+v0.1.7	08/08/2009  
 
-	Added support UDF
-	Added support export CUE
-	Added support export TOC
-	Improvement speed of image detection
-	Improvement debug mode
-	Added support SVCD/VCD
-	
+	Added support for UDF
+	Added support for export to CUE
+	Added support for export to TOC
+	Added support for SVCD/VCD
+	Added support for manpage
+	Faster image detection
+	Improved debug mode	
+
 v0.1.3  08/03/2007 
 
 	Improvement image detection (now support nrg image)

@@ -1,0 +1,63 @@
+                                                          -*- text -*-
+Iso9660 Analyzer Tool
+=====================
+
+		Current Web home: http://iat.berlios.de
+
+Iso9660 Analyzer Tool is a free utility tool for detecting the structure of DVD/CD-ROM 
+image file formats; the tool supports many CD/DVD-ROM data image file formats. 
+
+The following are the supported modes
+	1)	MODE1/2048
+	2)	MODE1/2368
+	3)	MODE1/2352
+	4)	MODE1/2448
+	5)	MODE2/2336
+	6)	MODE2/2352
+
+The following are not supported.
+
+	1)	The compressed image format eg: zlib images, audio
+
+Iso9660 Analyzer Tool provides the conversion of any image format to an UDF/ISO for easy 
+mounting in your favorite Operating System. The tool also permits the creation of TOC or CUE 
+file descriptor to burn the image easily with your favorite burner on your favorite 
+Operating System. If the image is not compliant with TOC or CUE, it should be converted 
+to UDF/ISO format which can be mounted upon any Operating System.
+
+If the Operating System does not support image of DVD/CD-ROM, then creating the TOC 
+file descriptor is a good option burn 1:1 original image. Iso9960 Analyzer Tool provides 
+option to create TOC file descriptor. Note some application does not support TOC descriptor.
+
+Similarly, if the Operating System does not support image of DVD/CD-ROM, then creating 
+the CUE file descriptor is also a good option. Iso9960 Analyzer Tool provides option to create 
+CUE file descriptor. Note the creation of CUE might not work with protected image.
+
+The latest version of Iso9660 Analyzer Tool can be found at
+<https://developer.berlios.de/project/showfiles.php?group_id=6784>.
+
+Please report bugs in Iso9660 Analyzer Tool to 
+<https://developer.berlios.de/bugs/?group_id=6784>.
+
+Forum in Iso9660 Analyzer Tool to
+<https://developer.berlios.de/forum/?group_id=6784>
+
+IRC Channel to : freenode.net #ignus
+
+AUTHORS : Abdur Rab <c.abdur@yahoo.com>,  Salvatore Santagati <salvatore.santagati@gmail.com>
+
+Copyright (C) 2007, 2008, 2009 Salvatore Santagati
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program; 
+if not, write to the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
+
