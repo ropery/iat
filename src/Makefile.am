@@ -8,7 +8,7 @@ iat_SOURCES =   util.c \
 		mktoc.c \
 		mkcore.c \
 		main.c 
-include_HEADERS = util.h \
+noinst_HEADERS = util.h \
 		calculate_pregap.h \
 		convert_2_iso.h \
 		cmdline.h \
