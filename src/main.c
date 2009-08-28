@@ -96,14 +96,15 @@
 * Arguments:	@iat_parser* iat_option@ = options from the command line
 * 		@image_struct* img_struct@ = the information about the image
 * 		@file_ptrs* fptrs@ = the input and the destination file pointers
-* 		@int is_bin@ = 1 if it is bin, 0 if dat
+* 		@int is_cue@ = 1 if it is cue, 0 if toc
+*		@int is_filename_change@ = 1 if filename change, 0 otherwise
 *
 * Returns:	@AOK@ if successful, @ERROR@ otherwise.
 *
 * Use:		Creates toc (or) cue from the cd image.
 *
 */
-int create_file_descriptor ( iat_parser* iat_option, image_struct* img_struct, file_ptrs* fptrs, int is_cue , int name_change_is )
+int create_file_descriptor ( iat_parser* iat_option, image_struct* img_struct, file_ptrs* fptrs, int is_cue , int is_filename_change )
 {
 	int return_value = ERROR;
 	char* file_desc = NULL;
@@ -118,7 +119,7 @@ int create_file_descriptor ( iat_parser* iat_option, image_struct* img_struct, f
 	memset ( ext_dat_or_bin [ 1 ], 0, 4 ); memmove ( ext_dat_or_bin [ 1 ], "bin", 3 );
 
 
-	if ( name_change_is == 1 ) {
+	if ( 1 == is_filename_change ) {
 		if ( iat_option -> output_given ) file_descriptor = copy_string ( iat_option -> output_arg );
 		else file_descriptor = smart_name ( iat_option -> input_arg, ext_dat_or_bin [ is_cue ] );
 	} else {
@@ -134,14 +135,16 @@ int create_file_descriptor ( iat_parser* iat_option, image_struct* img_struct, f
 		if ( NULL != temp_file_descriptor ) temp_file_descriptor++;
 		else temp_file_descriptor = file_descriptor;
 
-		if ( ( iat_option -> output_given ) && ( 1 == name_change_is ) ) {
+		if ( ( iat_option -> output_given ) && ( 1 == is_filename_change ) ) {
 			file_desc = smart_name ( iat_option -> output_arg, ext [ is_cue ] );
 		} else {
-			printf ( "Ignoring Output File Name, as no modification required\n" );
+			if ( iat_option -> output_given )
+				printf ( "Ignoring Output File Name, as convertion NOT required\n" );
 			file_desc = smart_name ( iat_option -> input_arg, ext [ is_cue ] );
 		}
 
-		printf ( "Create %s from %s\n", file_desc, iat_option -> input_arg );
+		/*printf ( "Create %s from %s\n", file_desc, iat_option -> input_arg );*/
+		printf ( "Create %s for %s\n", file_desc, file_descriptor );
 
 		if ( ( fptrs -> fdesc = fopen ( file_desc, "wb" ) ) == NULL ) {
 			fprintf ( stderr, "%s: %s\n", file_desc, strerror ( errno ) );
@@ -342,7 +345,6 @@ int choose_conversion ( iat_parser* iat_option )
 int main ( int argc, char* argv [ ] )
 {
 	iat_parser iat_option;
-	int name_change_is = 0;
 	image_struct img_struct = { 0 };
 	file_ptrs fptrs = { 0 };
 
@@ -421,6 +423,8 @@ int main ( int argc, char* argv [ ] )
 	
 
 	if ( img_struct.type != IMG_UNKOWN ) {
+
+		int is_filename_change = 0;
 	
 		switch ( choose_conversion ( &iat_option ) ) {
 			case HLP_MODE :
@@ -434,8 +438,8 @@ int main ( int argc, char* argv [ ] )
 			case TOC_MODE :
 					if ( img_struct.block == 2368 ) {
 						printf ( "\nWarning: YOUR IMAGE of %d  will be TRANSFORMED to 2048\n", img_struct.block );
-					
-						name_change_is = 1;						
+
+						is_filename_change = 1;
 
 						if ( ! ( iat_option.output_given ) ) {
 						
@@ -448,12 +452,12 @@ int main ( int argc, char* argv [ ] )
 					}	
 					else if ( img_struct.pregap > 0 ) {
 						n_value = ( ERROR == create_image ( &iat_option, &img_struct, &fptrs, DAT_FORMAT ) ) ? ERROR : AOK;
-						name_change_is = 1;
+						is_filename_change = 1;
 						return_value = n_value;
 					}
 
 					if ( AOK == n_value )
-						return_value = create_file_descriptor ( &iat_option, &img_struct, &fptrs, TOC_FORMAT, name_change_is );
+						return_value = create_file_descriptor ( &iat_option, &img_struct, &fptrs, TOC_FORMAT, is_filename_change );
 					break;
 			case CUE_MODE :
 					if ( ( img_struct.block == 2448 ) || ( img_struct.block == 2368 ) ) {
@@ -466,7 +470,7 @@ int main ( int argc, char* argv [ ] )
 
 					if ( img_struct.block == 2368 ) {
 
-						name_change_is = 1;
+						is_filename_change = 1;
 
 						if ( ! ( iat_option.output_given ) ) {
 							iat_option.output_arg  =  smart_name ( iat_option.input_arg, "bin" );
@@ -477,12 +481,12 @@ int main ( int argc, char* argv [ ] )
 					}
 					else if ( ( img_struct.pregap > 0 ) || ( img_struct.block >= 2448 )  ) {
 						n_value = ( ERROR == create_image ( &iat_option, &img_struct, &fptrs, BIN_FORMAT ) ) ? ERROR : AOK;
-						name_change_is = 1;
+						is_filename_change = 1;
 						return_value = n_value;
 					}
 
 					if ( AOK == n_value )
-						return_value = create_file_descriptor ( &iat_option, &img_struct, &fptrs, CUE_FORMAT, name_change_is );
+						return_value = create_file_descriptor ( &iat_option, &img_struct, &fptrs, CUE_FORMAT, is_filename_change );
 					break;
 			case ISO_MODE :
 					return_value = iso_conversion ( &iat_option, &img_struct, &fptrs );
