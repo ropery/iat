@@ -45,6 +45,7 @@
 
 #include <stdio.h>
 #include <errno.h>
+#include <string.h>
 
 #ifdef HAVE_CONFIG_H
 #include "../config.h"
@@ -90,7 +91,7 @@
 #define CUE_MODE	3
 #define ISO_MODE	4
 
-/* ---@create_toc_or_cue@ ---*
+/* ---@create_file_descriptor@ ---*
 *
 * Arguments:	@iat_parser* iat_option@ = options from the command line
 * 		@image_struct* img_struct@ = the information about the image
@@ -102,11 +103,11 @@
 * Use:		Creates toc (or) cue from the cd image.
 *
 */
-int create_toc_or_cue ( iat_parser* iat_option, image_struct* img_struct, file_ptrs* fptrs, int is_cue , int name_change_is )
+int create_file_descriptor ( iat_parser* iat_option, image_struct* img_struct, file_ptrs* fptrs, int is_cue , int name_change_is )
 {
 	int return_value = ERROR;
 	char* file_desc = NULL;
-	char* file_toc_or_cue = NULL;
+	char* file_descriptor = NULL;
 	char ext [ 2 ] [ 4 ] = { 0 };
 	char ext_dat_or_bin [ 2 ] [ 4 ] = { 0 };
 
@@ -116,43 +117,62 @@ int create_toc_or_cue ( iat_parser* iat_option, image_struct* img_struct, file_p
 	memset ( ext_dat_or_bin [ 0 ], 0, 4 ); memmove ( ext_dat_or_bin [ 0 ], "dat", 3 );
 	memset ( ext_dat_or_bin [ 1 ], 0, 4 ); memmove ( ext_dat_or_bin [ 1 ], "bin", 3 );
 
-	if ( iat_option -> output_given ) file_desc = smart_name ( iat_option -> output_arg, ext [ is_cue ] );
-	else file_desc = smart_name ( iat_option -> input_arg, ext [ is_cue ] );
-
-	printf ( "Create %s from %s\n", file_desc, iat_option -> input_arg );
-
-	if ( ( fptrs -> fdesc = fopen ( file_desc, "wb" ) ) == NULL ) {
-		fprintf ( stderr, "%s: %s\n", file_desc, strerror ( errno ) );
-		free_allocated_memory ( ( void* ) file_desc );
-		return ( return_value );
-	}
 
 	if ( name_change_is == 1 ) {
-		if ( iat_option -> output_given ) file_toc_or_cue = copy_string ( iat_option -> output_arg );
-		else file_toc_or_cue = smart_name ( iat_option -> input_arg, ext_dat_or_bin [ is_cue ] );
-	}
-	else file_toc_or_cue = copy_string ( iat_option -> input_arg );
-      
-
-	switch ( is_cue ) {
-		case TOC_FORMAT :
-			create_toc ( fptrs, img_struct, file_toc_or_cue );
-			break;
-		case CUE_FORMAT :
-			create_cue ( fptrs, img_struct, file_toc_or_cue );
-			break;
-		default :
-			break;
+		if ( iat_option -> output_given ) file_descriptor = copy_string ( iat_option -> output_arg );
+		else file_descriptor = smart_name ( iat_option -> input_arg, ext_dat_or_bin [ is_cue ] );
+	} else {
+		file_descriptor = copy_string ( iat_option -> input_arg );
 	}
 
-	free_allocated_memory ( ( void* ) file_desc );
-	free_allocated_memory ( ( void* ) file_toc_or_cue );
-	fclose ( fptrs -> fdesc );
+	if ( NULL != file_descriptor ) {
+		char* temp_file_descriptor = NULL;
+
+		if ( AOK == is_windows_file_path ( file_descriptor ) ) temp_file_descriptor = strrchr ( file_descriptor, '\\' );
+		else temp_file_descriptor = strrchr ( file_descriptor, '/' );
+
+		if ( NULL != temp_file_descriptor ) temp_file_descriptor++;
+		else temp_file_descriptor = file_descriptor;
+
+		if ( ( iat_option -> output_given ) && ( 1 == name_change_is ) ) {
+			file_desc = smart_name ( iat_option -> output_arg, ext [ is_cue ] );
+		} else {
+			printf ( "Ignoring Output File Name, as no modification required\n" );
+			file_desc = smart_name ( iat_option -> input_arg, ext [ is_cue ] );
+		}
+
+		printf ( "Create %s from %s\n", file_desc, iat_option -> input_arg );
+
+		if ( ( fptrs -> fdesc = fopen ( file_desc, "wb" ) ) == NULL ) {
+			fprintf ( stderr, "%s: %s\n", file_desc, strerror ( errno ) );
+			free_allocated_memory ( ( void* ) file_descriptor );
+			free_allocated_memory ( ( void* ) file_desc );
+			return ( return_value );
+		}
+
+		switch ( is_cue ) {
+			case TOC_FORMAT :
+				create_toc ( fptrs, img_struct, temp_file_descriptor );
+				return_value = AOK;
+				break;
+			case CUE_FORMAT :
+				create_cue ( fptrs, img_struct, temp_file_descriptor );
+				return_value = AOK;
+				break;
+			default :
+				break;
+		}
+
+		free_allocated_memory ( ( void* ) file_desc );
+		fclose ( fptrs -> fdesc );
+	}
+
+	free_allocated_memory ( ( void* ) file_descriptor );
 
 	return ( return_value );
 }
 
-/* ---@create_dat_or_bin@ ---*
+/* ---@create_image@ ---*
 *
 * Arguments:	@iat_parser* iat_option@ = options from the command line
 * 		@image_struct* img_struct@ = the information about the image
@@ -164,7 +184,7 @@ int create_toc_or_cue ( iat_parser* iat_option, image_struct* img_struct, file_p
 * Use:		Creates bin (or) dat from the cd image.
 *
 */
-int create_dat_or_bin ( iat_parser* iat_option, image_struct* img_struct, file_ptrs* fptrs, int is_bin )
+int create_image ( iat_parser* iat_option, image_struct* img_struct, file_ptrs* fptrs, int is_bin )
 {
 	int return_value = ERROR;
 	char* file_output = NULL;
@@ -178,7 +198,8 @@ int create_dat_or_bin ( iat_parser* iat_option, image_struct* img_struct, file_p
 
 	printf ( "Image conversion :\n\t%s => ", iat_option -> input_arg );
 
-	if ( iat_option -> output_given ) file_output = smart_name ( iat_option -> output_arg, ext [ is_bin ] );
+	/*if ( iat_option -> output_given ) file_output = smart_name ( iat_option -> output_arg, ext [ is_bin ] );*/
+	if ( iat_option -> output_given ) file_output = copy_string ( iat_option -> output_arg );
 	else file_output = smart_name ( iat_option -> input_arg, ext [ is_bin ] );
 
 	if ( NULL == ( fptrs -> fdest = fopen ( file_output, "wb" ) ) ) {
@@ -347,7 +368,38 @@ int main ( int argc, char* argv [ ] )
 		exit ( AOK );
 	}
 
+
+	if ( iat_option.output_given ) {
+		char* temp_file_name = NULL;
+
+		/* Check the validity of the -o or --output filename */
+		if ( AOK == is_windows_file_path ( iat_option.output_arg ) ) temp_file_name = strrchr ( iat_option.output_arg, '\\' );
+		else temp_file_name = strrchr ( iat_option.output_arg, '/' );
+
+		/* Exit if directory name alone is given */
+		if ( NULL != temp_file_name ) {
+			if ( '\0' == *( temp_file_name + 1 ) ) {
+				printf ( "MISSING OUTPUT FILENAME, only DIRECTORY PATH AVAILABLE\n" );
+				exit ( ERROR );
+			}
+		}
+	}
+
 	if ( iat_option.input_given ) {
+		char* temp_file_name = NULL;
+
+		/* Check the validity of the -i or --input filename */
+		if ( AOK == is_windows_file_path ( iat_option.input_arg ) ) temp_file_name = strrchr ( iat_option.input_arg, '\\' );
+		else temp_file_name = strrchr ( iat_option.input_arg, '/' );
+
+		/* Exit if directory name alone is given */
+		if ( NULL != temp_file_name ) {
+			if ( '\0' == *( temp_file_name + 1 ) ) {
+				printf ( "MISSING INUPUT FILENAME, only DIRECTORY PATH AVAILABLE\n" );
+				exit ( ERROR );
+			}
+		}
+
 		file_input = copy_string ( iat_option.input_arg );
 		if ( ( fptrs.fsource = fopen ( file_input, "rb" ) ) == NULL ) {
 			fprintf ( stderr, "%s: %s\n", iat_option.input_arg, strerror ( errno ) );
@@ -395,13 +447,13 @@ int main ( int argc, char* argv [ ] )
 					
 					}	
 					else if ( img_struct.pregap > 0 ) {
-						n_value = ( ERROR == create_dat_or_bin ( &iat_option, &img_struct, &fptrs, DAT_FORMAT ) ) ? ERROR : AOK;
+						n_value = ( ERROR == create_image ( &iat_option, &img_struct, &fptrs, DAT_FORMAT ) ) ? ERROR : AOK;
 						name_change_is = 1;
 						return_value = n_value;
 					}
 
 					if ( AOK == n_value )
-						return_value = create_toc_or_cue ( &iat_option, &img_struct, &fptrs, TOC_FORMAT, name_change_is );
+						return_value = create_file_descriptor ( &iat_option, &img_struct, &fptrs, TOC_FORMAT, name_change_is );
 					break;
 			case CUE_MODE :
 					if ( ( img_struct.block == 2448 ) || ( img_struct.block == 2368 ) ) {
@@ -424,13 +476,13 @@ int main ( int argc, char* argv [ ] )
 						return_value = iso_conversion ( &iat_option, &img_struct, &fptrs );
 					}
 					else if ( ( img_struct.pregap > 0 ) || ( img_struct.block >= 2448 )  ) {
-						n_value = ( ERROR == create_dat_or_bin ( &iat_option, &img_struct, &fptrs, BIN_FORMAT ) ) ? ERROR : AOK;
+						n_value = ( ERROR == create_image ( &iat_option, &img_struct, &fptrs, BIN_FORMAT ) ) ? ERROR : AOK;
 						name_change_is = 1;
 						return_value = n_value;
 					}
 
 					if ( AOK == n_value )
-						return_value = create_toc_or_cue ( &iat_option, &img_struct, &fptrs, CUE_FORMAT, name_change_is );
+						return_value = create_file_descriptor ( &iat_option, &img_struct, &fptrs, CUE_FORMAT, name_change_is );
 					break;
 			case ISO_MODE :
 					return_value = iso_conversion ( &iat_option, &img_struct, &fptrs );

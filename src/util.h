@@ -71,6 +71,17 @@ extern "C" {
 */
 void free_allocated_memory ( void* pointer_to_free );
 
+/* ---@is_windows_file_path@ ---*
+*
+* Arguments:	@const char* cp_file_path@ = pointer to absolute file path
+*
+* Returns:	@AOK@ if successful, @ERROR@ otherwise.
+*
+* Use:		Checks for, absolute windows file path.
+*
+*/
+int is_windows_file_path ( const char* cp_file_path );
+
 /* ---@copy_string@ ---*
 *
 * Arguments:	@const char* cp_string@ = pointer to string to be copied

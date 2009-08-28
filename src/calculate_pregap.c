@@ -135,11 +135,6 @@ off_t calculate_pregap ( file_ptrs* fptrs,  image_struct*  img_struct )
 	/* SCD/VCD Signature */
 	unsigned const char XA_ID [ 8 ] = { 0x43, 0x44, 0x2D, 0x58, 0x41, 0x30, 0x30, 0x31 };
 	
-	/* Signature for Image ISO-9660 */
-	unsigned const char ISO_9660_START [ 8 ] = { 0x01, 0x43, 0x44, 0x30, 0x30, 0x31, 0x01, 0x00 };
-	unsigned const char ISO_9660_END [ 8 ] = { 0xFF, 0x43, 0x44, 0x30, 0x30, 0x31, 0x01, 0x00 };
-
-
 	img_struct -> type = 0;
 	img_size = get_file_size ( fptrs -> fsource ) ; 
 	
