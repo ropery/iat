@@ -5,8 +5,8 @@
  *
  * All rights reserved.
  *
- * This program is free software; under the terms of the 
- * GNU General Public License as published by the Free Software Foundation; 
+ * This program is free software; under the terms of the
+ * GNU General Public License as published by the Free Software Foundation;
  * either version 2 of the License, or (at your option) any later version.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,12 +14,12 @@
  * met:
  *
  * @ Redistributions of source code must retain the above copyright
- *   notice, this list of conditions and the following disclaimer. 
+ *   notice, this list of conditions and the following disclaimer.
  *
  * @ Redistributions in binary form must reproduce the above copyright
  *   notice, this list of conditions and the following disclaimer in
  *   the documentation and/or other materials provided with the
- *   distribution. 
+ *   distribution.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -62,82 +62,91 @@ extern "C" {
 #include "mmc2r11.h"
 #endif
 
+#define ISO_PVD_BLOCK 18 /* ISO BLOCK Start and Block End included */
+
 /* --- @mode_0@ --- *
  *
  * Arguments:	@file_ptrs *fptrs@ = pointer struct of source and destination file
  * 		@off_t n_fptr_pos@ = the position of byte from where to be read
+ * 		@off_t n_iso_block_no@ = the current block number being written
  *
  * Returns:	the number of bytes read, @-1@ otherwise
  *
  * Use:		Reads into the buffer and writes the buffer to destination file.
  */
-off_t mode_0 ( file_ptrs* fptrs, off_t n_fptr_pos );
+off_t mode_0 ( file_ptrs* fptrs, off_t n_fptr_pos, off_t n_iso_block_no );
 
 /* --- @mode_1@ --- *
  *
  * Arguments:	@file_ptrs *fptrs@ = pointer struct of source and destination file
  * 		@off_t n_fptr_pos@ = the position of byte from where to be read
+ * 		@off_t n_iso_block_no@ = the current block number being written
  *
  * Returns:	the number of bytes read, @-1@ otherwise
  *
  * Use:		Reads into the buffer and writes the buffer to destination file.
  */
-off_t mode_1 ( file_ptrs* fptrs, off_t n_fptr_pos );
+off_t mode_1 ( file_ptrs* fptrs, off_t n_fptr_pos, off_t n_iso_block_no );
 
 /* --- @mode_2_form_1@ --- *
  *
  * Arguments:	@file_ptrs *fptrs@ = pointer struct of source and destination file
  * 		@off_t n_fptr_pos@ = the position of byte from where to be read
+ * 		@off_t n_iso_block_no@ = the current block number being written
  *
  * Returns:	the number of bytes read, @-1@ otherwise
  *
  * Use:		Reads into the buffer and writes the buffer to destination file.
  */
-off_t mode_2_form_1 ( file_ptrs* fptrs, off_t n_fptr_pos );
+off_t mode_2_form_1 ( file_ptrs* fptrs, off_t n_fptr_pos, off_t n_iso_block_no );
 
 /* --- @mode_2_form_2@ --- *
  *
  * Arguments:	@file_ptrs *fptrs@ = pointer struct of source and destination file
  * 		@off_t n_fptr_pos@ = the position of byte from where to be read
+ * 		@off_t n_iso_block_no@ = the current block number being written
  *
  * Returns:	the number of bytes read, @-1@ otherwise
  *
  * Use:		Reads into the buffer and writes the buffer to destination file.
  */
-off_t mode_2_form_2 ( file_ptrs* fptrs, off_t n_fptr_pos );
+off_t mode_2_form_2 ( file_ptrs* fptrs, off_t n_fptr_pos, off_t n_iso_block_no );
 
 /* --- @mode_2@ --- *
  *
  * Arguments:	@file_ptrs *fptrs@ = pointer struct of source and destination file
  * 		@off_t n_fptr_pos@ = the position of byte from where to be read
+ * 		@off_t n_iso_block_no@ = the current block number being written
  *
  * Returns:	the number of bytes read, @-1@ otherwise
  *
  * Use:		Reads into the buffer and writes the buffer to destination file.
  */
-off_t mode_2 ( file_ptrs* fptrs, off_t n_fptr_pos );
+off_t mode_2 ( file_ptrs* fptrs, off_t n_fptr_pos, off_t n_iso_block_no );
 
 /* --- @mode_2_form_1_headerless@ --- *
  *
  * Arguments:	@file_ptrs *fptrs@ = pointer struct of source and destination file
  * 		@off_t n_fptr_pos@ = the position of byte from where to be read
+ * 		@off_t n_iso_block_no@ = the current block number being written
  *
  * Returns:	the number of bytes read, @-1@ otherwise
  *
  * Use:		Reads into the buffer and writes the buffer to destination file.
  */
-off_t mode_2_form_2_headerless ( file_ptrs* fptrs, off_t n_fptr_pos );
+off_t mode_2_form_2_headerless ( file_ptrs* fptrs, off_t n_fptr_pos, off_t n_iso_block_no );
 
 /* --- @mode_2_form_2_headerless@ --- *
  *
  * Arguments:	@file_ptrs *fptrs@ = pointer struct of source and destination file
  * 		@off_t n_fptr_pos@ = the position of byte from where to be read
+ * 		@off_t n_iso_block_no@ = the current block number being written
  *
  * Returns:	the number of bytes read, @-1@ otherwise
  *
  * Use:		Reads into the buffer and writes the buffer to destination file.
  */
-off_t mode_2_form_2_headerless ( file_ptrs* fptrs, off_t n_fptr_pos );
+off_t mode_2_form_2_headerless ( file_ptrs* fptrs, off_t n_fptr_pos, off_t n_iso_block_no );
 
 /* --- @bin_2_iso@ --- *
  *

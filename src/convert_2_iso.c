@@ -1,12 +1,12 @@
 /**
- * Copyright (C) 2009 
+ * Copyright (C) 2009
  *	- Salvatore Santagati <salvatore.santagati@gmail.com>
  * 	- Abdur Rab <c.abdur@yahoo.com>
  *
  * All rights reserved.
  *
- * This program is free software; under the terms of the 
- * GNU General Public License as published by the Free Software Foundation; 
+ * This program is free software; under the terms of the
+ * GNU General Public License as published by the Free Software Foundation;
  * either version 2 of the License, or (at your option) any later version.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,12 +14,12 @@
  * met:
  *
  * @ Redistributions of source code must retain the above copyright
- *   notice, this list of conditions and the following disclaimer. 
+ *   notice, this list of conditions and the following disclaimer.
  *
  * @ Redistributions in binary form must reproduce the above copyright
  *   notice, this list of conditions and the following disclaimer in
  *   the documentation and/or other materials provided with the
- *   distribution. 
+ *   distribution.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -47,7 +47,7 @@
  *
  * Temporary function, will be removed in the release
  */
-void print ( unsigned char* ptr, int n_len ) 
+void print ( unsigned char* ptr, int n_len )
 {
 	int n_loop = 0;
 	if ( n_len > 16 ) {
@@ -69,12 +69,13 @@ void print ( unsigned char* ptr, int n_len )
  *
  * Arguments:	@file_ptrs *fptrs@ = pointer struct of source and destination file
  * 		@off_t n_fptr_pos@ = the position of byte from where to be read
+ * 		@off_t n_iso_block_no@ = the current block number being written
  *
  * Returns:	the number of bytes read, @-1@ otherwise
  *
  * Use:		Reads into the buffer and writes the buffer to destination file.
  */
-off_t mode_0 ( file_ptrs* fptrs, off_t n_fptr_pos )
+off_t mode_0 ( file_ptrs* fptrs, off_t n_fptr_pos, off_t n_iso_block_no )
 {
 	/* Mode 0 (2352): Syncheader (12), MSF / BCD (3), Mode (1), Data (2336) */
 	mode_generic		mgen; /* Mode 0 and Mode 2 Formless */
@@ -82,7 +83,10 @@ off_t mode_0 ( file_ptrs* fptrs, off_t n_fptr_pos )
 	/*printf ( "Mode Empty / Mode 2 Formless\n" );*/
 	memset ( &mgen, 0, sizeof ( mode_generic ) );
 	fread ( &mgen, 1, sizeof ( mode_generic ), fptrs -> fsource );
-	write_2_file ( fptrs -> fdest, ( void* ) &mgen.user_data, 2336 );
+
+	/* If the block no is less than the PVD (16th block), write only 2048 bytes */
+	if ( ISO_PVD_BLOCK < n_iso_block_no ) write_2_file ( fptrs -> fdest, ( void* ) &mgen.user_data, 2336 );
+	else write_2_file ( fptrs -> fdest, ( void* ) &mgen.user_data, 2048 );
 
 	return ( sizeof ( mode_generic ) );
 }
@@ -91,16 +95,17 @@ off_t mode_0 ( file_ptrs* fptrs, off_t n_fptr_pos )
  *
  * Arguments:	@file_ptrs *fptrs@ = pointer struct of source and destination file
  * 		@off_t n_fptr_pos@ = the position of byte from where to be read
+ * 		@off_t n_iso_block_no@ = the current block number being written
  *
  * Returns:	the number of bytes read, @-1@ otherwise
  *
  * Use:		Reads into the buffer and writes the buffer to destination file.
  */
-off_t mode_1 ( file_ptrs* fptrs, off_t n_fptr_pos )
+off_t mode_1 ( file_ptrs* fptrs, off_t n_fptr_pos, off_t n_iso_block_no )
 {
 	/* Mode 1 (2352): Syncheader (16), Data (2048), CRC (4), Subheader (8), ECC (276) */
 	mode_one		mone; /* Mode 1 */
-	
+
 	/*printf ( "Mode 1\n" );*/
 	memset ( &mone, 0, sizeof ( mode_one ) );
 	fread ( &mone, 1, sizeof ( mode_one ), fptrs -> fsource );
@@ -113,20 +118,23 @@ off_t mode_1 ( file_ptrs* fptrs, off_t n_fptr_pos )
  *
  * Arguments:	@file_ptrs *fptrs@ = pointer struct of source and destination file
  * 		@off_t n_fptr_pos@ = the position of byte from where to be read
+ * 		@off_t n_iso_block_no@ = the current block number being written
  *
  * Returns:	the number of bytes read, @-1@ otherwise
  *
  * Use:		Reads into the buffer and writes the buffer to destination file.
  */
-off_t mode_2_form_1 ( file_ptrs* fptrs, off_t n_fptr_pos )
+off_t mode_2_form_1 ( file_ptrs* fptrs, off_t n_fptr_pos, off_t n_iso_block_no )
 {
 	/* Mode 2 Form 1 (2352): Syncheader (16), Subheader (8), Data (2048), ECC (280) */
 	mode_two_form_1		m2f1; /* Mode 2 Form 1 */
 
 	/*printf ( "Mode 2 Form 1\n" );*/
-	memset ( &m2f1, 0, sizeof ( mode_two_form_1 ) );	
+	memset ( &m2f1, 0, sizeof ( mode_two_form_1 ) );
 	fread ( &m2f1, 1, sizeof ( mode_two_form_1 ), fptrs -> fsource );
 	write_2_file ( fptrs -> fdest, ( void* ) &m2f1.user_data, 2048 );
+
+	/*print ( ( void* ) &m2f1.user_data, 2048 );*/
 
 	return ( sizeof ( mode_two_form_1 ) );
 }
@@ -135,12 +143,13 @@ off_t mode_2_form_1 ( file_ptrs* fptrs, off_t n_fptr_pos )
  *
  * Arguments:	@file_ptrs *fptrs@ = pointer struct of source and destination file
  * 		@off_t n_fptr_pos@ = the position of byte from where to be read
+ * 		@off_t n_iso_block_no@ = the current block number being written
  *
  * Returns:	the number of bytes read, @-1@ otherwise
  *
  * Use:		Reads into the buffer and writes the buffer to destination file.
  */
-off_t mode_2_form_2 ( file_ptrs* fptrs, off_t n_fptr_pos )
+off_t mode_2_form_2 ( file_ptrs* fptrs, off_t n_fptr_pos, off_t n_iso_block_no )
 {
 	/* Mode 2 Form 2 (2352): Syncheader (16), Subheader (8), Data (2324), CRC (4) */
 	mode_two_form_2		m2f2; /* Mode 2 Form 2 */
@@ -148,7 +157,12 @@ off_t mode_2_form_2 ( file_ptrs* fptrs, off_t n_fptr_pos )
 	/*printf ( "Mode 2 Form 2\n" );*/
 	memset ( &m2f2, 0, sizeof ( mode_two_form_2 ) );
 	fread ( &m2f2, 1, sizeof ( mode_two_form_2 ), fptrs -> fsource );
-	write_2_file ( fptrs -> fdest, ( void* ) &m2f2.user_data, 2324 );
+
+	/* If the block no is less than the PVD (16th block), write only 2048 bytes */
+	if ( ISO_PVD_BLOCK < n_iso_block_no )  write_2_file ( fptrs -> fdest, ( void* ) &m2f2.user_data, 2324 );
+	else  write_2_file ( fptrs -> fdest, ( void* ) &m2f2.user_data, 2048 );
+
+	/*print ( ( void* ) &m2f2.user_data, 2324 );*/
 
 	return ( sizeof ( mode_two_form_2 ) );
 }
@@ -157,16 +171,17 @@ off_t mode_2_form_2 ( file_ptrs* fptrs, off_t n_fptr_pos )
  *
  * Arguments:	@file_ptrs *fptrs@ = pointer struct of source and destination file
  * 		@off_t n_fptr_pos@ = the position of byte from where to be read
+ * 		@off_t n_iso_block_no@ = the current block number being written
  *
  * Returns:	the number of bytes read, @-1@ otherwise
  *
  * Use:		Reads into the buffer and writes the buffer to destination file.
  */
-off_t mode_2 ( file_ptrs* fptrs, off_t n_fptr_pos )
+off_t mode_2 ( file_ptrs* fptrs, off_t n_fptr_pos, off_t n_iso_block_no )
 {
 	int n_mode = 0;
 	sub_header_block	sub_header; /* Sub Header */
-	off_t (* mode_form [ 3 ] ) ( file_ptrs* fptrs, off_t n_fptr_pos ) = { &mode_2_form_1, &mode_2_form_2, &mode_0 };
+	off_t (* mode_form [ 3 ] ) ( file_ptrs* fptrs, off_t n_fptr_pos, off_t n_iso_block_no ) = { &mode_2_form_1, &mode_2_form_2, &mode_0 };
 
 	memset ( &sub_header, 0, sizeof ( sub_header_block ) );
 
@@ -175,18 +190,20 @@ off_t mode_2 ( file_ptrs* fptrs, off_t n_fptr_pos )
 
 	fread ( &sub_header, 1, sizeof ( sub_header_block ), fptrs -> fsource );
 
-	/* Revert back the file pointer as it has moved  
+	/* Revert back the file pointer as it has moved
 	 * till the sub-header (read 16 + 8 bytes of data) */
 	set_file_pointer ( fptrs -> fsource, ( n_fptr_pos -= ( off_t ) sizeof ( sync_header_block ) ) );
+
+	/*print ( ( void* ) &sub_header, sizeof ( sub_header_block ) );*/
 
 	if ( !memcmp ( sub_header.first_copy, sub_header.second_copy, 4 ) ) {
 		/* Values { 0, 32, etc.. } 32 (5th bit set - Form 2), 0 - (5th bit not set - Form 1)*/
 		n_mode = ( ( n_mode = ( ( (int) *( sub_header.first_copy + 2 ) ) & 0x20 ) ) == 32 ) ? 1 : ( n_mode == 0 ) ? 0 : 2;
-		n_fptr_pos = ( *( mode_form [ n_mode ] ) ) ( fptrs, n_fptr_pos );
+		n_fptr_pos = ( *( mode_form [ n_mode ] ) ) ( fptrs, n_fptr_pos, n_iso_block_no );
 	} else {
 		/* It is Formless */
 		/* Mode 2 (2352): Syncheader (12), MSF / BCD (3), Mode (1), Data (2336) */
-		n_fptr_pos = ( *( mode_form [ 2 ] ) ) ( fptrs, n_fptr_pos );
+		n_fptr_pos = ( *( mode_form [ 2 ] ) ) ( fptrs, n_fptr_pos, n_iso_block_no );
 	}
 
 	return ( n_fptr_pos );
@@ -196,12 +213,13 @@ off_t mode_2 ( file_ptrs* fptrs, off_t n_fptr_pos )
  *
  * Arguments:	@file_ptrs *fptrs@ = pointer struct of source and destination file
  * 		@off_t n_fptr_pos@ = the position of byte from where to be read
+ * 		@off_t n_iso_block_no@ = the current block number being written
  *
  * Returns:	the number of bytes read, @-1@ otherwise
  *
  * Use:		Reads into the buffer and writes the buffer to destination file.
  */
-off_t mode_2_form_1_headerless ( file_ptrs* fptrs, off_t n_fptr_pos )
+off_t mode_2_form_1_headerless ( file_ptrs* fptrs, off_t n_fptr_pos, off_t n_iso_block_no )
 {
 	/* Image has Sub Header alone */
 	/* Mode 2 (2336): Subheader (8), Data (2048), ECC (280) */
@@ -219,12 +237,13 @@ off_t mode_2_form_1_headerless ( file_ptrs* fptrs, off_t n_fptr_pos )
  *
  * Arguments:	@file_ptrs *fptrs@ = pointer struct of source and destination file
  * 		@off_t n_fptr_pos@ = the position of byte from where to be read
+ * 		@off_t n_iso_block_no@ = the current block number being written
  *
  * Returns:	the number of bytes read, @-1@ otherwise
  *
  * Use:		Reads into the buffer and writes the buffer to destination file.
  */
-off_t mode_2_form_2_headerless ( file_ptrs* fptrs, off_t n_fptr_pos )
+off_t mode_2_form_2_headerless ( file_ptrs* fptrs, off_t n_fptr_pos, off_t n_iso_block_no )
 {
 	/* Image has Sub Header alone */
 	/* Mode 2 (2336): Subheader (8), Data (2324), CRC (4) */
@@ -233,7 +252,10 @@ off_t mode_2_form_2_headerless ( file_ptrs* fptrs, off_t n_fptr_pos )
 	/*printf ( "Mode 2 Data Format\n" );*/
 	memset ( &mtwo, 0, sizeof ( mode_two_form_2_headerless ) );
 	fread ( &mtwo, 1, sizeof ( mode_two_form_2_headerless ), fptrs -> fsource );
-	write_2_file ( fptrs -> fdest, ( void* ) &mtwo.user_data, 2324 );
+
+	/* If the block no is less than the PVD (16th block), write only 2048 bytes */
+	if ( ISO_PVD_BLOCK < n_iso_block_no ) write_2_file ( fptrs -> fdest, ( void* ) &mtwo.user_data, 2324 );
+	else write_2_file ( fptrs -> fdest, ( void* ) &mtwo.user_data, 2048 );
 
 	/*print ( ( void* ) &mtwo.user_data, 2328 );
 	print ( ( void* ) ( ( mtwo.user_data + 2319 ) ), 8 );*/
@@ -257,12 +279,14 @@ int bin_2_iso ( file_ptrs* fptrs,  image_struct*  img_struct )
 	off_t	n_img_size = 0;
 	int	n_return_value = ERROR;
 	int	n_mode = 0;
+	long 	n_iso_block_no = 0;
 
 	unsigned const char synch_pattern [ 12 ] = { 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00 };
 
 	sync_header_block	header; /* Sync Header Block */
 
-	off_t (* mode [ 5 ] ) ( file_ptrs* fptrs, off_t n_fptr_pos ) = { &mode_0, &mode_1, &mode_2, &mode_2_form_1_headerless, &mode_2_form_2_headerless };
+	off_t (* mode [ 5 ] ) ( file_ptrs* fptrs, off_t n_fptr_pos, off_t n_iso_block_no )
+		= { &mode_0, &mode_1, &mode_2, &mode_2_form_1_headerless, &mode_2_form_2_headerless };
 
 	if ( NULL== fptrs -> fsource ) return ( n_return_value ); /* The source file pointer is empty */
 	if ( ( n_img_size = get_file_size ( fptrs -> fsource ) ) < 1 ) return ( n_return_value ); /* The image file is empty */
@@ -276,23 +300,25 @@ int bin_2_iso ( file_ptrs* fptrs,  image_struct*  img_struct )
 		
 		/* Initialize the file pointer to the start point */
 		set_file_pointer ( fptrs -> fsource, n_loop );
-		
+
 		fread ( &header, 1, sizeof ( sync_header_block ), fptrs -> fsource );
 
 		/*printf ("Image size :%ld\n", n_img_size );
 		printf ( "LOOP NO :%d\n", n_loop );
 		print ( ( void* ) &header, 16 );*/
 
-		/* Revert back the file pointer as it has moved the 
+		/* Revert back the file pointer as it has moved the
 		 * file pointer till the header (read 16 bytes of data) */
 		set_file_pointer ( fptrs -> fsource, n_loop );
 
 		if ( !memcmp ( &synch_pattern, &header, 12 ) ) {
+			n_iso_block_no++;
+
 			/* Image has 12 BYTE SYNC HEADER */
 			n_mode = ( (char) ( *( header.msf_block.mode ) ) );
 			if ( ( n_mode > -1 ) && ( n_mode < 3 ) )
 				/* Mode { 0, 1, 2 } */
-				n_loop_incrementer = ( *( mode [ n_mode ] ) ) ( fptrs, n_loop ); /* Increment to the next block */
+				n_loop_incrementer = ( *( mode [ n_mode ] ) ) ( fptrs, n_loop, n_iso_block_no ); /* Increment to the next block */
 			else printf ( "Weird Mode \n" );
 			if ( 0 < n_loop_incrementer ) {
 				if ( ( 2448 == img_struct -> block ) || ( 2368 == img_struct -> block ) ) {
@@ -302,15 +328,13 @@ int bin_2_iso ( file_ptrs* fptrs,  image_struct*  img_struct )
 				} else n_loop += n_loop_incrementer;
 			}
 		} else if ( ( !memcmp ( &header, ( ( (unsigned char*) (&header) ) + 4 ), 4 ) ) && ( 2336 == img_struct -> block ) ) {
+			int n_mode_no_header = 0;
+			n_iso_block_no++;
 
 			/*print ( ( void* ) &header, 8 );*/
-			if ( !is_svcd_sub_header ( (unsigned char*) &header ) ) {
-				/* Image has 8 BYTE HEADER with User Data 2048 */
-				n_loop += ( *( mode [ 3 ] ) ) ( fptrs, n_loop ); /* Increment to the next block */
-			} else {
-				/* Image has 8 BYTE HEADER with User Data 2324 */
-				n_loop += ( *( mode [ 4 ] ) ) ( fptrs, n_loop ); /* Increment to the next block */
-			}
+
+			n_mode_no_header = ( ( n_mode_no_header = ( ( (int) *( ( (unsigned char*) (&header) ) + 2 ) ) & 0x20 ) ) == 32 ) ? 1 : 0;
+			n_loop += ( *( mode [ 3 + n_mode_no_header ] ) ) ( fptrs, n_loop, n_iso_block_no ); /* Increment to the next block */
 		} else {
 			/* Image does not have any standard header */
 			/*print ( ( void* ) &header, 16 );*/
@@ -338,7 +362,6 @@ int bin_2_iso ( file_ptrs* fptrs,  image_struct*  img_struct )
  *
  * Use:         Return the detection of the image.
  */
-
 int img_2_iso ( file_ptrs* fptrs,  image_struct*  img_struct )
 {
 	return ( img_2_img ( fptrs, img_struct, img_struct -> block ) );
