@@ -175,7 +175,7 @@ void toc_first_track ( file_ptrs* fptrs, image_struct* img_struct, char *file_in
 	
 	/* inizialization first track */
 	toc->mode = is_mode ( fptrs, img_struct );
-	toc->block = img_struct->block;
+	toc->block = ( int ) img_struct->block;
 
 	toc->track = 1;
 /*	toc->index = 1; */

@@ -27,7 +27,7 @@ AC_TYPE_UINT8_T
 AC_FUNC_FSEEKO
 AC_FUNC_MALLOC
 AC_FUNC_MEMCMP
-AC_CHECK_FUNCS([memmove memset strcspn strerror  strrchr strspn])
+AC_CHECK_FUNCS([memmove memset strcspn strerror  strrchr strspn strstr])
 
 AC_CONFIG_FILES([Makefile
                  man/Makefile

@@ -98,8 +98,8 @@ off_t calculate_pregap_length ( off_t  cd_id_start, image_struct* img_struct, in
 size_t calculate_block_size (  off_t cd_id_start, off_t cd_id_end, image_struct* img_struct )
 {
 
-	int block_sizes [ ] = { 2048, 2336, 2352, 2368, 2448 };
-	size_t block  = cd_id_end - cd_id_start;
+	size_t block_sizes [ ] = { 2048, 2336, 2352, 2368, 2448 };
+	off_t  block  = cd_id_end - cd_id_start;
 
 	img_struct -> block  = ( ( block % block_sizes [ 0 ] ) == 0 ) ? block_sizes [ 0 ] :
 		( ( block % block_sizes [ 1 ] ) == 0 ) ? block_sizes [ 1 ] :
@@ -188,7 +188,7 @@ off_t calculate_pregap ( file_ptrs* fptrs,  image_struct*  img_struct )
 		img_struct -> block  = calculate_block_size ( cd_id_start, cd_id_end, img_struct );
 	
 		/* Detect Header bytes */
-		img_struct -> pregap = calculate_pregap_length ( cd_id_start, img_struct , header );
+		img_struct -> pregap = ( int ) calculate_pregap_length ( cd_id_start, img_struct , header );
 
 		img_struct -> type = ( ( 2048 == img_struct -> block ) && ( 0 == img_struct -> pregap ) ) ? IMG_ISO : img_struct -> type;
 	}

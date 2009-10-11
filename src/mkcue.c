@@ -110,7 +110,7 @@ void create_first_track ( file_ptrs* fptrs, image_struct* img_struct, char *file
 	
 	/* inizialization first track */
 	cue->mode = is_mode ( fptrs, img_struct );
-	cue->block = img_struct->block;
+	cue->block = ( int ) img_struct->block;
 
 	cue->track = 1;
 	cue->index = 1;

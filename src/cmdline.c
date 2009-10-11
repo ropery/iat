@@ -737,7 +737,7 @@ failure:
 static unsigned int
 cmdline_parser_create_argv(const char *cmdline_, char ***argv_ptr, const char *prog_name)
 {
-  char *cmdline, *p;
+  char *cmdline, *p; 
   size_t n = 0, j;
   int i;
 
@@ -767,7 +767,7 @@ cmdline_parser_create_argv(const char *cmdline_, char ***argv_ptr, const char *p
           cmd_line_list->string_arg = gengetopt_strdup (p);
 
           p += (j+1);
-          p += strspn(p, " \t");
+          p += strspn (p , "\t");
         }
       else
         {
@@ -782,7 +782,7 @@ cmdline_parser_create_argv(const char *cmdline_, char ***argv_ptr, const char *p
 
   *argv_ptr = (char **) malloc((n + 1) * sizeof(char *));
   cmd_line_list_tmp = cmd_line_list;
-  for (i = (n-1); i >= 0; --i)
+  for (i = ( int ) (n-1); i >= 0; --i)
     {
       (*argv_ptr)[i] = cmd_line_list_tmp->string_arg;
       cmd_line_list_tmp = cmd_line_list_tmp->next;
@@ -826,7 +826,7 @@ cmdline_parser_string_ext(const char *cmdline, struct gengetopt_args_info *args_
   argc = cmdline_parser_create_argv(cmdline, &argv_ptr, prog_name);
   
   result =
-    cmdline_parser_internal (argc, argv_ptr, args_info, params, 0);
+      cmdline_parser_internal ( ( int ) argc, argv_ptr, args_info, params, 0);
   
   if (argv_ptr)
     {

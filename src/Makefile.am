@@ -21,5 +21,5 @@ noinst_HEADERS = util.h \
 		mkcore.h \
 		ecma167.h
 
-AM_CFLAGS = -D_FILE_OFFSET_BITS=64 -pedantic -Wconversion -Wpointer-arith -Wcast-align #-std=c99 
+AM_CFLAGS = -D_FILE_OFFSET_BITS=64 -pedantic -Wconversion -Wpointer-arith -Wcast-align -std=c99 
 

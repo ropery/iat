@@ -118,7 +118,7 @@ char* smart_name ( const char* original, const char* ext )
 
 	if ( NULL != ( tmp_buffer = strrchr ( original, '.' ) ) ) {
 		if ( !memcmp ( ( tmp_buffer + 1 ), ext, strlen ( ext ) ) ) {
-			if ( 0 > ( length = tmp_buffer - original ) ) return ( buffer );
+			if ( 0 > ( length = ( size_t ) tmp_buffer -  ( size_t ) original ) ) return ( buffer );
 			file_ext_lenght += strlen ( ext ); /* to include the extension */
 			file_ext_lenght += 4; /* for including '_0.' and 'null' char */
 
@@ -130,7 +130,7 @@ char* smart_name ( const char* original, const char* ext )
 				memmove ( buffer + ( length + 3 ) , ext, strlen ( ext ) );
 			}
 		} else {
-			if ( 0 > ( length = tmp_buffer - original ) ) return ( buffer );
+			if ( 0 >  ( length = ( size_t ) tmp_buffer - ( size_t ) original ) ) return ( buffer );
 			file_ext_lenght += strlen ( ext ); /* to include the extension */
 			file_ext_lenght += 2; /* for including '.' and 'null' char */
 
@@ -182,9 +182,9 @@ unsigned char* smart_name ( char* cp_string, char* ext_string )
  */
 void lba2msf ( off_t lba, msf_mode_block* msf_block )
 {
-	(*( msf_block->frame  ) ) = lba % 75;
-	(*( msf_block->second ) ) = ( ( lba / 75 ) + 2 ) % 60;
-	(*( msf_block->minute ) ) = ( ( lba / 75 ) + 2 ) / 60;
+	(*( msf_block->frame  ) ) = ( unsigned char ) lba % 75;
+	(*( msf_block->second ) ) = ( unsigned char ) ( ( lba / 75 ) + 2 ) % 60;
+	(*( msf_block->minute ) ) = ( unsigned char ) ( ( lba / 75 ) + 2 ) / 60;
 }
 
 /* --- @get_file_size@ --- *

@@ -432,7 +432,7 @@ unsigned char* get_udf_pvd_block ( file_ptrs* fptrs, unsigned const char* header
 	memset ( &udf_avd, 0, sizeof ( udf_anchor_volume_descriptor ) );
 
 	/* Read Anchor Volume Descriptor Pointer available at 256th block */
-	set_file_pointer ( fptrs -> fsource, ( off_t ) ( ( img_struct -> block * 256 ) + ( img_struct -> pregap ) ) );
+	set_file_pointer ( fptrs -> fsource, ( off_t ) ( ( img_struct -> block * 256 ) + ( ( size_t ) img_struct -> pregap ) ) );
 	fread ( buffer, 1, img_struct -> block, fptrs -> fsource );
 
 	if ( !memcmp ( buffer, header, 12 ) ) {
@@ -451,10 +451,10 @@ unsigned char* get_udf_pvd_block ( file_ptrs* fptrs, unsigned const char* header
 		 * and Read the Main PVD Block
 		 */
 		set_file_pointer ( fptrs -> fsource,
-				( off_t ) ( ( img_struct -> block * ( udf_avd.main_vol_desc_seq_ext.loc ) ) + ( img_struct -> pregap ) ) );
+				( off_t ) ( ( img_struct -> block * ( udf_avd.main_vol_desc_seq_ext.loc ) ) + ( ( size_t ) img_struct -> pregap ) ) );
 		fread ( buffer, 1, img_struct -> block, fptrs -> fsource );
 	} else {
-		printf ( "\n AVDP Block not found at Location 256: %d\n", ( off_t ) ( ( img_struct -> block * 256 ) + ( img_struct -> pregap ) ) );
+		printf ( "\n AVDP Block not found at Location 256: %d\n", ( off_t ) ( ( img_struct -> block * 256 ) + ( ( size_t ) img_struct -> pregap ) ) );
 		free_allocated_memory ( ( void* ) buffer );
 		buffer = NULL;
 	}
@@ -543,7 +543,7 @@ int debug ( file_ptrs* fptrs, image_struct* img_struct )
 					}
 
 					/* Revert back the file pointer to the current location */
-					set_file_pointer ( fptrs -> fsource, ( off_t ) ( ( img_struct -> block * 16 ) + ( img_struct -> pregap ) ) );
+					set_file_pointer ( fptrs -> fsource, ( off_t ) ( ( img_struct -> block * 16 ) + ( ( size_t ) img_struct -> pregap ) ) );
 					fread ( buffer, 1, img_struct -> block, fptrs -> fsource );
 				} else {
 					/* Display the Primary Volume Descriptor for ISO image */
