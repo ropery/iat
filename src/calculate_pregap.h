@@ -56,7 +56,7 @@
 extern "C" {
 #endif	/* __cplusplus */
 
-/* --- @is_udf_imager@ --- *
+/* --- @is_udf_image@ --- *
  *
  * Arguments:   @unsigned char* header@ = the header information
  *

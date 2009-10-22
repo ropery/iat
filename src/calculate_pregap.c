@@ -43,6 +43,14 @@
 #include "calculate_pregap.h"
 #endif
 
+/* --- @is_udf_image@ --- *
+ *
+ * Arguments:   @unsigned char* header@ = the header information
+ *
+ * Returns:     zero if success, @-1@ otherwise
+ *
+ * Use:         Return the detection of the header.
+ */
 int is_udf_image  ( unsigned char* header )
 {
         int number = 7;
