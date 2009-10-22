@@ -238,6 +238,8 @@ int create_image ( iat_parser* iat_option, image_struct* img_struct, file_ptrs* 
 	}
 	else return_value = AOK;
 
+	/* NEED FIX */
+	img_struct -> block = block ;
 
 	fclose ( fptrs -> fdest );
 	free_allocated_memory ( ( void* ) file_output );
@@ -467,7 +469,7 @@ int main ( int argc, char* argv [ ] )
 						else printf ("2352");
 						printf ("\n");
 					}
-
+					
 					if ( img_struct.block == 2368 ) {
 
 						is_filename_change = 1;
@@ -484,7 +486,7 @@ int main ( int argc, char* argv [ ] )
 						is_filename_change = 1;
 						return_value = n_value;
 					}
-
+					
 					if ( AOK == n_value )
 						return_value = create_file_descriptor ( &iat_option, &img_struct, &fptrs, CUE_FORMAT, is_filename_change );
 					break;
