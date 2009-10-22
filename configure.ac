@@ -2,12 +2,14 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.61)
-AC_INIT(Iso9660 Analyzer Tool, 0.1.7.git.200910180932.dev, salsan@users.berlios.de, iat)
+AC_INIT(Iso9660 Analyzer Tool, 0.1.7.git.200910222101.dev, salsan@users.berlios.de, iat)
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE([ -Wall -Werror foreign ])
 # Checks for programs.
 AC_PROG_CC
+
+AC_PROG_LIBTOOL
 
 # Checks for libraries.
 
