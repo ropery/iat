@@ -13,7 +13,7 @@ sed -i  "s/git.*.dev,/git.$GITVERSION.dev,/" $CONFIGURE_AC
 echo "configure.ac : OK";
 
 #gengetopt  --output-dir=src < iat.ggo 
-autoreconf --force
+autoreconf --install --force
 echo "autoreconf : OK";
 #./configure --enable-maintainer-mode
 #make
