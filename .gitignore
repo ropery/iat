@@ -5,7 +5,8 @@
 
 # bin file #
 *.[oa]
-
-
-
+Makefile.in
+aclocal.m4
+config.h.in
+src/Makefile.in
 
