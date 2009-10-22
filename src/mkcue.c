@@ -43,6 +43,38 @@
 #include "mkcue.h"
 #endif
 
+/* --- @is_valid_cue_block@ --- *
+ *
+ * Arguments:   @size_t  *block@ = block size
+ *
+ *
+ *
+ * Returns:	Zeor on success, @-1@ on error.
+ *
+ * Use:	 	check if is valid block for cuesheet.
+ *
+ */
+
+int  is_valid_cue_block ( size_t*  block  )
+{
+	int number = 3;
+
+	size_t block_sizes [ ] = { 2048, 2336, 2352 };
+
+   	int n_count = 0;
+        int n_return_value = ERROR;
+        
+	for ( n_count = 0; n_count < number; n_count++ ) {
+		if (  *block   == block_sizes [ n_count ] )  {
+                        n_return_value = AOK;
+                        break;
+                }
+        }
+
+        return ( n_return_value );
+
+}
+
 /* --- @print_cue_index@ --- *
  *
  * Arguments:   @file_ptrs *fptrs@ = input file
@@ -104,10 +136,10 @@ void create_first_track ( file_ptrs* fptrs, image_struct* img_struct, char *file
 	off_t lba = 0;
 	
 	msf_mode_block msf_block;
-
+/*
 	if ( img_struct -> block == 2448 ) img_struct -> block = 2352;
 	if ( img_struct -> block == 2368 ) img_struct -> block = 2048;
-	
+*/	
 	/* inizialization first track */
 	cue->mode = is_mode ( fptrs, img_struct );
 	cue->block = ( int ) img_struct->block;
@@ -261,32 +293,38 @@ int create_vcd_cue ( file_ptrs* fptrs, image_struct* img_struct, char *file_inpu
  */
 int create_cue ( file_ptrs* fptrs, image_struct* img_struct, char *file_input )
 {
-	int     n_return_value = AOK;
+	int     n_return_value = ERROR;
 
-	if ( img_struct -> block <= 2448 ) {
+	if ( is_valid_cue_block ( &img_struct->block ) == AOK ) {
 
 		fprintf( fptrs->fdesc, "REM Generated with %s v%s\n", PACKAGE_NAME, VERSION );
 
 		switch (  img_struct->type  )	{
 			case IMG_AUDIO:
-				printf ("Need implementation\n");
+				/*printf ("Need implementation\n");*/
 				break;
 			case IMG_ISO:
 				create_iso_cue ( fptrs, img_struct, file_input );
+				
+				n_return_value = AOK;
 				break;
 			case IMG_RAW:
 				create_raw_cue ( fptrs, img_struct, file_input );
+					
+				n_return_value = AOK;
 				break;
 			case IMG_VCD: case 9  : case 10 :
 				create_vcd_cue ( fptrs, img_struct, file_input );
+
+				n_return_value = AOK;
 				break;
 			default :
 				n_return_value = ERROR;
-				printf ("Error\n");
+				/*printf ("Error\n");*/
 				break;
 		}
 	}
-	else n_return_value = ERROR;
+	/* else n_return_value = ERROR; */
 
 	return ( n_return_value );
 }

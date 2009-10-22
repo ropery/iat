@@ -54,6 +54,19 @@ extern "C" {
 #include "mkcore.h"
 #endif
 
+/* --- @is_valid_cue_block@ --- *
+ *
+ * Arguments:   @size_t  *block@ = block size
+ *
+ *
+ *
+ * Returns:	Zeor on success, @-1@ on error.
+ *
+ * Use:	 	check if is valid block for cuesheet.
+ *
+ */
+int  is_valid_cue_block ( size_t*  block  );
+
 /* --- @print_cue_index@ --- *
  *
  * Arguments:   @file_ptrs *fptrs@ = input file
