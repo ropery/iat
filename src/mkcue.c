@@ -61,15 +61,10 @@ int  is_valid_cue_block ( size_t*  block  )
 
 	size_t block_sizes [ ] = { 2048, 2336, 2352 };
 
-   	int n_count = 0;
         int n_return_value = ERROR;
-        
-	for ( n_count = 0; n_count < number; n_count++ ) {
-		if (  *block   == block_sizes [ n_count ] )  {
-                        n_return_value = AOK;
-                        break;
-                }
-        }
+	
+	if ( is_valid_fd_block ( &number, block_sizes, block ) == AOK )
+		n_return_value  = AOK;
 
         return ( n_return_value );
 
@@ -295,7 +290,7 @@ int create_cue ( file_ptrs* fptrs, image_struct* img_struct, char *file_input )
 {
 	int     n_return_value = ERROR;
 
-	if ( is_valid_cue_block ( &img_struct->block ) == AOK ) {
+	if ( is_valid_cue_block ( &img_struct->block  ) == AOK ) {
 
 		fprintf( fptrs->fdesc, "REM Generated with %s v%s\n", PACKAGE_NAME, VERSION );
 

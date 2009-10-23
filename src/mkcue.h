@@ -65,7 +65,7 @@ extern "C" {
  * Use:	 	check if is valid block for cuesheet.
  *
  */
-int  is_valid_cue_block ( size_t*  block  );
+int  is_valid_cue_block ( size_t *block );
 
 /* --- @print_cue_index@ --- *
  *

@@ -67,6 +67,20 @@ extern "C" {
 #define TOC_MODE2_RAW		7
 
 */
+
+/* --- @is_valid_toc_block@ --- *
+ *
+ * Arguments:   @size_t  *block@ = block size
+ *
+ *
+ *
+ * Returns:	Zeor on success, @-1@ on error.
+ *
+ * Use:	 	check if is valid block for toc.
+ *
+ */
+int  is_valid_toc_block ( size_t  *block  );
+
 /* --- @print_toc_time@ --- *
  *
  * Arguments:   @file_ptrs *fptrs@ = input file

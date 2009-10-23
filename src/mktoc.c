@@ -43,6 +43,32 @@
 #include "mktoc.h"
 #endif
 
+/* --- @is_valid_toc_block@ --- *
+ *
+ * Arguments:   @size_t  *block@ = block size
+ *
+ *
+ *
+ * Returns:	Zeor on success, @-1@ on error.
+ *
+ * Use:	 	check if is valid block for toc.
+ *
+ */
+int  is_valid_toc_block ( size_t*  block  )
+{
+	int number = 4;
+
+	size_t block_sizes [ ] = { 2048, 2336, 2352, 2448 };
+
+        int n_return_value = ERROR;
+	
+	if ( is_valid_fd_block ( &number, block_sizes, block ) == AOK )
+		n_return_value  = AOK;
+
+        return ( n_return_value );
+
+}
+
 /* --- @print_toc_time@ --- *
  *
  * Arguments:   @file_ptrs *fptrs@ = input file
@@ -73,7 +99,7 @@ void print_toc_mode ( file_ptrs* fptrs, struct_toc* toc, image_struct* img_struc
 {
 	switch ( ( img_struct-> block ) ) {
 		case 2048:
-		case 2368:
+	/*	case 2368: */
 			fprintf ( fptrs->fdesc, "\n" );
 			break;
 		case 2336:
@@ -309,33 +335,42 @@ int create_vcd_toc ( file_ptrs* fptrs, image_struct* img_struct, char *file_inpu
  */
 int create_toc ( file_ptrs* fptrs, image_struct* img_struct, char *file_input )
 {
-	int     n_return_value = AOK;
+	int     n_return_value = ERROR;
 
-	fprintf( fptrs->fdesc, "// Generated with %s v%s\n", PACKAGE_NAME, VERSION );
+	if ( is_valid_toc_block ( &img_struct->block ) == AOK ) {
 
+		fprintf( fptrs->fdesc, "// Generated with %s v%s\n", PACKAGE_NAME, VERSION );
 
-	
-	switch (  img_struct->type  )	{
-		case IMG_AUDIO:
-			fprintf ( fptrs->fdesc, "CD_DA\n" );
-			printf ("Need implementation\n");
-			break;
-		case IMG_ISO:
-			fprintf ( fptrs->fdesc, "CD_ROM\n" ); 
-			create_iso_toc ( fptrs, img_struct, file_input );
-			break;
-		case IMG_RAW:
-			fprintf ( fptrs->fdesc, "CD_ROM\n" );
-			create_raw_toc ( fptrs, img_struct, file_input ); 
-			break;
-		case IMG_VCD: case 9  : case 10 :
-			fprintf ( fptrs->fdesc, "CD_ROM_XA\n");	
-			create_vcd_toc ( fptrs, img_struct, file_input ); 
-			break;
-		default :
-			n_return_value = ERROR;
-			break;
+		switch (  img_struct->type  )	{
+			case IMG_AUDIO:
+				fprintf ( fptrs->fdesc, "CD_DA\n" );
+				/* printf ("Need implementation\n"); */
+				n_return_value = AOK;
+				break;
+			case IMG_ISO:
+				fprintf ( fptrs->fdesc, "CD_ROM\n" ); 
+				create_iso_toc ( fptrs, img_struct, file_input );
+				
+				n_return_value = AOK;
+				break;
+			case IMG_RAW:
+				fprintf ( fptrs->fdesc, "CD_ROM\n" );
+				create_raw_toc ( fptrs, img_struct, file_input ); 
+				
+				n_return_value = AOK;
+				break;
+			case IMG_VCD: case 9  : case 10 :
+				fprintf ( fptrs->fdesc, "CD_ROM_XA\n");	
+				create_vcd_toc ( fptrs, img_struct, file_input ); 
+
+				n_return_value = AOK;
+				break;
+			default :
+				n_return_value = ERROR;
+				break;
+		}
 	}
+	
 	return ( n_return_value );
 }
 

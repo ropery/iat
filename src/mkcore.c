@@ -43,6 +43,36 @@
 #include "mkcore.h"
 #endif
 
+/* --- @is_valid_block@ --- *
+ *
+ * Arguments:   @int  *number@  = pointer of number of block compatible.
+ *		@size_t *block_sizes@ = pointer vector of block compatible.
+ *		@size_t *block@ = pointer block of image.
+ *
+ *
+ *
+ * Returns:	Zeor on success, @-1@ on error.
+ *
+ * Use:	 	check if is valid block for file descriptor
+ *
+ */
+
+int  is_valid_fd_block ( int*  number, size_t* block_sizes, size_t*  block  )
+{
+   	int n_count = 0;
+        int n_return_value = ERROR;
+        
+	for ( n_count = 0; n_count < *number; n_count++ ) {
+		if (  *block   == block_sizes [ n_count ] )  {
+                        n_return_value = AOK;
+                        break;
+                }
+        }
+
+        return ( n_return_value );
+
+}
+
 /* --- @is_mode@ --- *
  *
  * Arguments:   @file_ptrs *fptrs @ = input file

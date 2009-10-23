@@ -73,6 +73,22 @@ typedef struct struct_descriptor {
 	int frame;
 } struct_cue, struct_toc;
 
+/* --- @is_valid_block@ --- *
+ *
+ * Arguments:   @int  *number@  = pointer of number of block compatible.
+ *		@size_t *block_sizes@ = pointer vector of block compatible.
+ *		@size_t *block@ = pointer block of image.
+ *
+ *
+ * Returns:	Zeor on success, @-1@ on error.
+ *
+ * Use:	 	check if is valid block for file descriptor
+ *
+ */
+
+int  is_valid_fd_block ( int* number, size_t* block_sizes, size_t* block  );
+
+
 /* --- @is_mode@ --- *
  *
  * Arguments:   @file_ptrs *fptrs @ = input file
