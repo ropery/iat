@@ -52,7 +52,7 @@
 #endif
 
 #ifndef DEFINE_H
-#include "define.h"
+#include "libiat/define.h"
 #endif
 
 #ifndef CMDLINE_H
@@ -60,24 +60,26 @@
 #endif
 
 #ifndef CALCULATE_PREGAP_H
-#include "calculate_pregap.h"
+#include "libiat/calculate_pregap.h" 
 #endif
 
 #ifndef CONVERT_2_ISO_H
-#include "convert_2_iso.h"
+#include "libiat/convert_2_iso.h"
 #endif
 
 #ifndef DEBUG_H
-#include "debug.h"
+#include "libiat/debug.h"
 #endif
 
 #ifndef MKCUE_H
-#include "mkcue.h"
+#include "libiat/mkcue.h"
 #endif
 
 #ifndef MKTOC_H
-#include "mktoc.h"
+#include "libiat/mktoc.h"
 #endif
+
+typedef struct gengetopt_args_info iat_parser; 
 
 #define DAT_FORMAT	0
 #define BIN_FORMAT	1
