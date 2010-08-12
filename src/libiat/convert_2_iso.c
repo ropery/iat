@@ -332,8 +332,9 @@ int bin_2_iso ( file_ptrs* fptrs,  image_struct*  img_struct )
 			n_iso_block_no++;
 
 			/*print ( ( void* ) &header, 8 );*/
+			n_mode_no_header =  ( (int) *( ( (unsigned char*) (&header) ) + 2 ) ) & 0x20;
+			n_mode_no_header = ( n_mode_no_header  == 32 ) ? 1 : 0;
 
-			n_mode_no_header = ( ( n_mode_no_header = ( ( (int) *( ( (unsigned char*) (&header) ) + 2 ) ) & 0x20 ) ) == 32 ) ? 1 : 0;
 			n_loop += ( *( mode [ 3 + n_mode_no_header ] ) ) ( fptrs, n_loop, n_iso_block_no ); /* Increment to the next block */
 		} else {
 			/* Image does not have any standard header */

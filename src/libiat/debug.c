@@ -170,16 +170,16 @@ void display_pvd_info ( iso_primary_descriptor* pvd )
 	printf ( "VERSION\t	: (%d)\n", ( *( pvd -> version ) ) );
 	printf ( "SYSTEM ID\t: " ); print_signed_char ( ( pvd -> system_id ), 32 ); printf ( "\n" );
 	printf ( "VOLUME ID\t: " ); print_signed_char ( ( pvd -> volume_id ), 32 ); printf ( "\n" );
-	printf ( "VOLUME SPACE\t: %ld\n", isonum_733 ( pvd -> volume_space_size ) );
+	printf ( "VOLUME SPACE\t: %d\n", isonum_733 ( pvd -> volume_space_size ) );
 	printf ( "VOLUME SET\t: %d\n", isonum_723 ( pvd -> volume_set_size ) ); 
 	printf ( "VOLUME NUMBER\t: %d\n", isonum_723 ( pvd -> volume_sequence_number ) );
 	printf ( "LOGICAL BLOCK\t: %d\n", isonum_723 ( pvd -> logical_block_size ) );
-	printf ( "PATH TABLE\t: %ld\n", isonum_733 ( pvd -> path_table_size ) );
-	printf ( "PATH TABLE L\t: %ld\n", isonum_731 ( pvd -> type_l_path_table ) );
-	printf ( "TYPE TABLE L\t: %ld\n", isonum_731 ( pvd -> opt_type_l_path_table ) );
-	printf ( "PATH TABLE M\t: %ld\n", isonum_732 ( pvd -> type_m_path_table ) );
-	printf ( "TYPE TABLE M\t: %ld\n", isonum_732 ( pvd -> opt_type_m_path_table ) );
-	printf ( "ROOT DIR\t: %ld\n", ( *( pvd ->  root_directory_record  ) ) );
+	printf ( "PATH TABLE\t: %d\n", isonum_733 ( pvd -> path_table_size ) );
+	printf ( "PATH TABLE L\t: %d\n", isonum_731 ( pvd -> type_l_path_table ) );
+	printf ( "TYPE TABLE L\t: %d\n", isonum_731 ( pvd -> opt_type_l_path_table ) );
+	printf ( "PATH TABLE M\t: %d\n", isonum_732 ( pvd -> type_m_path_table ) );
+	printf ( "TYPE TABLE M\t: %d\n", isonum_732 ( pvd -> opt_type_m_path_table ) );
+	printf ( "ROOT DIR\t: %d\n", ( *( pvd ->  root_directory_record  ) ) );
 	printf ( "VOLUME SET ID\t: " ); print_signed_char ( ( pvd -> volume_set_id), 128 ) ; printf ( "\n" );/* right ?!?!? */ 
 	printf ( "PUBLISHER\t: " ); print_signed_char ( ( pvd -> publisher_id ), 128 );  printf ( "\n" );
 	printf ( "PREPARED\t: " ); print_signed_char ( ( pvd -> data_preparer_id ), 32 ); printf ( "\n" );
@@ -454,7 +454,7 @@ unsigned char* get_udf_pvd_block ( file_ptrs* fptrs, unsigned const char* header
 				( off_t ) ( ( img_struct -> block * ( udf_avd.main_vol_desc_seq_ext.loc ) ) + ( ( size_t ) img_struct -> pregap ) ) );
 		fread ( buffer, 1, img_struct -> block, fptrs -> fsource );
 	} else {
-		printf ( "\n AVDP Block not found at Location 256: %d\n", ( off_t ) ( ( img_struct -> block * 256 ) + ( ( size_t ) img_struct -> pregap ) ) );
+		printf ( "\n AVDP Block not found at Location 256: %lld\n", ( off_t ) ( ( img_struct -> block * 256 ) + ( ( size_t ) img_struct -> pregap ) ) );
 		free_allocated_memory ( ( void* ) buffer );
 		buffer = NULL;
 	}
@@ -482,7 +482,7 @@ int debug ( file_ptrs* fptrs, image_struct* img_struct )
 
 	unsigned char*			buffer = NULL;
 	unsigned char*			data_buffer = NULL;
-	int				udf_flag = 0;
+	/*int				udf_flag = 0; */
 	sub_mode_info			previous;
 	
 	/* SYNCH HEADER */
@@ -499,7 +499,7 @@ int debug ( file_ptrs* fptrs, image_struct* img_struct )
 		if ( ( img_size = get_file_size ( fptrs -> fsource ) ) < 1 ) return ( -1 ); /* The image file is empty */
 	
 		printf ( "%s v%s\n", PACKAGE_NAME, VERSION );
-		printf ( "Pregap\t: (%ld)\n", img_struct->pregap );	
+		printf ( "Pregap\t: (%d)\n", img_struct->pregap );	
 		printf ( "Block\t: (%d)\n", img_struct->block );
 		printf ( "Size\t: (%lld) bytes\n", img_size );
 

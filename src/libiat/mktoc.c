@@ -168,7 +168,7 @@ void print_toc_vcd_time ( file_ptrs* fptrs, struct_toc* toc, image_struct* img_s
 	msf_mode_block		msf_block;
 
 	if ( ( loop_last * img_struct-> block ) > 0 )	
-		fprintf ( fptrs-> fdesc , "\t#%d",  ( loop_last * img_struct->block ) );
+		fprintf ( fptrs-> fdesc , "\t#%lld",  ( loop_last * img_struct->block ) );
 			
 	lba2msf (  l_loop, &msf_block );
 		
@@ -178,7 +178,7 @@ void print_toc_vcd_time ( file_ptrs* fptrs, struct_toc* toc, image_struct* img_s
 
 	print_toc_time ( fptrs, toc ); 
 
-	fprintf ( fptrs->fdesc, " // length in bytes: %d\n", ( l_loop * img_struct->block ) );
+	fprintf ( fptrs->fdesc, " // length in bytes: %lld\n", ( l_loop * img_struct->block ) );
 
 }
 
@@ -195,9 +195,9 @@ void print_toc_vcd_time ( file_ptrs* fptrs, struct_toc* toc, image_struct* img_s
  */
 void toc_first_track ( file_ptrs* fptrs, image_struct* img_struct, char *file_input, struct_toc* toc )
 {	
-	off_t lba = 0;
+	/* off_t lba = 0; */
 	
-	msf_mode_block msf_block;
+	/* msf_mode_block msf_block;*/
 	
 	/* inizialization first track */
 	toc->mode = is_mode ( fptrs, img_struct );
@@ -274,7 +274,7 @@ int create_vcd_toc ( file_ptrs* fptrs, image_struct* img_struct, char *file_inpu
 	off_t n_img_size;
 
 	struct_toc 		toc;
-	msf_mode_block		msf_block;
+	/* msf_mode_block		msf_block; */
 	
 	if ( ( n_img_size = get_file_size ( fptrs -> fsource ) ) < 1 ) return ( -1 ); /* The image file is empty */
 	
