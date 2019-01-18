@@ -5,8 +5,27 @@
 
 # bin file #
 *.[oa]
+Makefile
 Makefile.in
 aclocal.m4
+ar-lib
+autom4te.cache
+compile
+confdefs.h
+config.cache
+config.guess
+config.h
 config.h.in
-src/Makefile.in
-
+config.log
+config.status
+config.sub
+configure
+conftest.cpp
+conftest.err
+conftest.i
+depcomp
+install-sh
+libtool
+ltmain.sh
+missing
+stamp-h1

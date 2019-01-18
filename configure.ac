@@ -5,7 +5,8 @@ AC_PREREQ(2.61)
 AC_INIT(Iso9660 Analyzer Tool, 0.1.7.git.200910291819.dev, salsan@users.berlios.de, iat)
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADER([config.h])
-AM_INIT_AUTOMAKE([ -Wall -Werror foreign ])
+AM_INIT_AUTOMAKE([ -Wall -Werror foreign subdir-objects ])
+m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 
 # Checks for programs.
 AC_PROG_CXX
